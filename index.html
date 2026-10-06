@@ -263,6 +263,8 @@ input[type=checkbox]{width:auto;margin:0}
   .agrid{grid-template-columns:1fr 1fr}
   #topbar .btn span{display:none}
 }
+.btn.bd{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.btn.bd:hover{background:#fecaca}
 </style>
 </head>
 <body>
@@ -279,7 +281,7 @@ input[type=checkbox]{width:auto;margin:0}
   <div class="sb-it" onclick="nav('mag')"><span class="sb-ic">📦</span> Magazzino</div>
   <div class="sb-sec">Squadra</div>
   <div class="sb-it" onclick="nav('atl')"><span class="sb-ic">🚴</span> Atleti &amp; Bici</div>
-  <div class="sb-it dis"><span class="sb-ic">⭕</span> Cerchi <span class="sb-tag">presto</span></div>
+  <div class="sb-it" onclick="nav('ruote')"><span class="sb-ic">🔵</span> Ruote</div>
   <div class="sb-sec">Calendario</div>
   <div class="sb-it" onclick="nav('gare')"><span class="sb-ic">🏁</span> Gare &amp; Calendario</div>
   <div class="sb-sec">Analisi</div>
@@ -313,6 +315,7 @@ input[type=checkbox]{width:auto;margin:0}
   <button class="bn-item act" id="bn-dash" onclick="nav('dash')"><span class="bn-ico">🏠</span>Dashboard</button>
   <button class="bn-item" id="bn-mag" onclick="nav('mag')"><span class="bn-ico">📦</span>Magazzino</button>
   <button class="bn-item" id="bn-atl" onclick="nav('atl')"><span class="bn-ico">🚴</span>Atleti</button>
+  <button class="bn-item" id="bn-ruote" onclick="nav('ruote')"><span class="bn-ico">🔵</span>Ruote</button>
   <button class="bn-item" id="bn-gare" onclick="nav('gare')"><span class="bn-ico">🏁</span>Gare</button>
   <button class="bn-item" id="bn-kpi" onclick="nav('kpi')"><span class="bn-ico">📈</span>KPI</button>
 </nav>
@@ -490,6 +493,156 @@ input[type=checkbox]{width:auto;margin:0}
     <div class="mf" id="drive-modal-foot"></div>
   </div>
 </div>
+<!-- MODAL: Coppia Ruote -->
+<div class="mbg" id="modal-ruota">
+  <div class="modal">
+    <div class="mh"><div class="mh-t" id="mr-title">Coppia Ruote</div><button class="mcl" onclick="closeM('modal-ruota')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mr-id">
+      <div class="fr2">
+        <div class="fg"><label>Nome coppia</label><input id="mr-nome" placeholder="es. Coppia 1"></div>
+        <div class="fg"><label>Note</label><input id="mr-note" placeholder="Note generali…"></div>
+      </div>
+
+      <!-- ANTERIORE -->
+      <div style="margin:16px 0 8px;padding:8px 12px;background:rgba(59,130,246,.08);border-left:3px solid #3b82f6;border-radius:0 8px 8px 0;font-weight:700;font-size:13px;color:#1d4ed8">🔵 RUOTA ANTERIORE</div>
+      <div class="fr2">
+        <div class="fg"><label>Marca mozzo</label><input id="mr-ant-marca" placeholder="es. DT Swiss"></div>
+        <div class="fg"><label>Modello</label><input id="mr-ant-modello" placeholder="es. 240s"></div>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7a8ba0;margin-bottom:8px">CUSCINETTI MOZZO ANT.</div>
+        <div class="fr3">
+          <div class="fg"><label>Marca</label><input id="mr-ant-cus-marca"></div>
+          <div class="fg"><label>Specifiche</label><input id="mr-ant-cus-spec"></div>
+          <div class="fg"><label>Cod. Magazzino</label><input id="mr-ant-cus-cod"></div>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7a8ba0;margin-bottom:8px">DISCO ANTERIORE</div>
+        <div class="fr3">
+          <div class="fg"><label>Marca</label><input id="mr-ant-disc-marca"></div>
+          <div class="fg"><label>Specifiche</label><input id="mr-ant-disc-spec"></div>
+          <div class="fg"><label>Cod. Magazzino</label><input id="mr-ant-disc-cod"></div>
+        </div>
+      </div>
+
+      <!-- POSTERIORE -->
+      <div style="margin:16px 0 8px;padding:8px 12px;background:rgba(239,68,68,.08);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;font-weight:700;font-size:13px;color:#dc2626">🔴 RUOTA POSTERIORE</div>
+      <div class="fr2">
+        <div class="fg"><label>Marca mozzo</label><input id="mr-pst-marca" placeholder="es. DT Swiss"></div>
+        <div class="fg"><label>Modello</label><input id="mr-pst-modello" placeholder="es. 240s"></div>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7a8ba0;margin-bottom:8px">CUSCINETTI MOZZO POST.</div>
+        <div class="fr3">
+          <div class="fg"><label>Marca</label><input id="mr-pst-cus-marca"></div>
+          <div class="fg"><label>Specifiche</label><input id="mr-pst-cus-spec"></div>
+          <div class="fg"><label>Cod. Magazzino</label><input id="mr-pst-cus-cod"></div>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7a8ba0;margin-bottom:8px">MOVIMENTI / FREEHUB</div>
+        <div class="fr3">
+          <div class="fg"><label>Marca</label><input id="mr-pst-mov-marca"></div>
+          <div class="fg"><label>Specifiche</label><input id="mr-pst-mov-spec"></div>
+          <div class="fg"><label>Cod. Magazzino</label><input id="mr-pst-mov-cod"></div>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7a8ba0;margin-bottom:8px">DISCO POSTERIORE</div>
+        <div class="fr3">
+          <div class="fg"><label>Marca</label><input id="mr-pst-disc-marca"></div>
+          <div class="fg"><label>Specifiche</label><input id="mr-pst-disc-spec"></div>
+          <div class="fg"><label>Cod. Magazzino</label><input id="mr-pst-disc-cod"></div>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7a8ba0;margin-bottom:8px">CASSETTA / PACCO CORONE</div>
+        <div class="fr3">
+          <div class="fg"><label>Marca</label><input id="mr-pst-cor-marca"></div>
+          <div class="fg"><label>Specifiche</label><input id="mr-pst-cor-spec"></div>
+          <div class="fg"><label>Cod. Magazzino</label><input id="mr-pst-cor-cod"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('modal-ruota')">Annulla</button>
+      <button class="btn bp" onclick="saveRuota()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL: Pneumatico -->
+<div class="mbg" id="modal-pneu">
+  <div class="modal">
+    <div class="mh"><div class="mh-t" id="mpn-title">Registra Pneumatico</div><button class="mcl" onclick="closeM('modal-pneu')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mpn-id">
+      <div class="fr2">
+        <div class="fg"><label>Coppia Ruote</label><select id="mpn-ruota"></select></div>
+        <div class="fg"><label>Fase</label>
+          <select id="mpn-fase">
+            <option value="pre">Pre-gara</option>
+            <option value="post">Post-gara</option>
+            <option value="allenamento">Allenamento</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Data</label><input type="date" id="mpn-data"></div>
+        <div class="fg"><label>Gara (opzionale)</label><select id="mpn-gara"><option value="">— nessuna —</option></select></div>
+      </div>
+      <div class="fg"><label>Atleta assegnato</label><select id="mpn-atl"><option value="">— nessuno —</option></select></div>
+      <div style="margin:12px 0 6px;font-weight:700;font-size:13px;color:#ff6b35">🏷️ Pneumatico</div>
+      <div class="fr3">
+        <div class="fg"><label>Tipologia</label>
+          <select id="mpn-tipo">
+            <option value="asciutto">☀️ Asciutto</option>
+            <option value="medio">🌤️ Medio</option>
+            <option value="fango">🌧️ Fango</option>
+          </select>
+        </div>
+        <div class="fg"><label>Marca</label><input id="mpn-marca" placeholder="es. Vittoria"></div>
+        <div class="fg"><label>Modello</label><input id="mpn-modello" placeholder="es. Terreno Mix"></div>
+      </div>
+      <div class="fg"><label>Cod. Magazzino</label><input id="mpn-cod" placeholder="es. C-MEC-TUB-001"></div>
+      <div class="fg"><label>Causa sostituzione</label>
+        <select id="mpn-causa">
+          <option value="">— nessuna (primo montaggio) —</option>
+          <option value="scelta_tecnica">🔧 Scelta tecnica</option>
+          <option value="usura_minima">🟢 Usura minima</option>
+          <option value="usura_media">🟡 Usura media</option>
+          <option value="usura_massima">🔴 Usura massima</option>
+          <option value="danneggiamento">💥 Danneggiamento</option>
+        </select>
+      </div>
+      <div class="fg"><label>Note</label><input id="mpn-note" placeholder="Note aggiuntive…"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('modal-pneu')">Annulla</button>
+      <button class="btn bp" onclick="savePneu()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL: Assegnazione Ruote a Gara -->
+<div class="mbg" id="modal-assruo">
+  <div class="modal modal-sm">
+    <div class="mh"><div class="mh-t" id="mar-title">Assegna Ruote a Gara</div><button class="mcl" onclick="closeM('modal-assruo')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mar-id">
+      <div class="fg"><label>Gara</label><select id="mar-gara"></select></div>
+      <div class="fr2">
+        <div class="fg"><label>Atleta</label><select id="mar-atl"></select></div>
+        <div class="fg"><label>Coppia Ruote</label><select id="mar-ruota"></select></div>
+      </div>
+      <div class="fg"><label>Note</label><input id="mar-note" placeholder="Note assegnazione…"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('modal-assruo')">Annulla</button>
+      <button class="btn bp" onclick="saveAssRuo()">💾 Salva</button>
+    </div>
+  </div>
+</div>
 <script>
 const AREE={A:{nome:'Trasmissione',emoji:'⛓️'},B:{nome:'Freni',emoji:'🛑'},C:{nome:'Ruote',emoji:'🔵'},D:{nome:'Mov. Centrale',emoji:'🔩'},E:{nome:'Sterzo',emoji:'🔄'},F:{nome:'Sella',emoji:'🪑'},G:{nome:'Struttura',emoji:'🔧'},H:{nome:'Consumabili',emoji:'🧴'},I:{nome:'Elettronico',emoji:'⚡'}};
 const SLOTS={'A-1':'Catene','A-2':'Cassette & corone','A-3':'Deragliatori post.','A-4':'Deragliatori ant. & leve','A-5':'Pedivelle & guarnitura','B-1':'Pastiglie freno','B-2':'Dischi / Rotori','B-3':'Cavi freno','B-4':'Guaine','B-5':'Leve freno','B-6':'Comp. idraulici','C-1':'Tubolari','C-2':'Valvole & acc. ruota','C-3':'Raggi & nippli','C-4':'Mozzi','D-1':'Cuscinetti BB','D-2':'Calotte & acc. BB','E-1':'Cuffie sterzo','E-2':'Manubrio & attacco','E-3':'Morsetti & acc. sterzo','F-1':'Selle','F-2':'Reggisella & fascette','G-1':'Viteria strutturale','G-2':'Perni & passanti','G-3':'Accessori telaio','H-1':'Lubrificanti catena','H-2':'Grassi & anti-seize','H-3':'Detergenti','H-4':'Nastri & sigillanti','H-5':'Kit pulizia','I-1':'Batterie','I-2':'Caricatori & cavi','I-3':'Sensori','I-4':'Computer / Head unit','I-5':'Moduli & junction'};
@@ -548,6 +701,22 @@ const DEF={
     {id:'B013',aid:'A007',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
     {id:'B014',aid:'A007',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
   ],
+  ruote:[
+    {id:'R01',nome:'Coppia 1',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R02',nome:'Coppia 2',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R03',nome:'Coppia 3',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R04',nome:'Coppia 4',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R05',nome:'Coppia 5',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R06',nome:'Coppia 6',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R07',nome:'Coppia 7',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R08',nome:'Coppia 8',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R09',nome:'Coppia 9',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R10',nome:'Coppia 10',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R11',nome:'Coppia 11',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+    {id:'R12',nome:'Coppia 12',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}},
+  ],
+  storicoPneumatici:[],
+  assegnazioniRuote:[],
   manutenzioni:[],
   gare:[
     {id:'G001',data:'2026-09-27',nome:'ILLNAU',luogo:'ILLNAU',nazione:'SVIZZERA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
@@ -617,7 +786,7 @@ function catBadge(cat){if(!cat)return'<span class="b bgy">— da definire</span>
 let page='dash',tabs={};
 function nav(p){page=p;if(!tabs[p])tabs[p]=0;document.querySelectorAll('.sb-it').forEach(el=>el.classList.toggle('act',el.getAttribute('onclick')==="nav('"+p+"')"));document.querySelectorAll('.bn-item').forEach(el=>el.classList.toggle('act',el.id==='bn-'+p));render();}
 function setTab(p,i){tabs[p]=i;render();}
-function render(){const info={dash:['Dashboard','Riepilogo stagione'],mag:['Magazzino','Catalogo · Movimenti · Reintegro · Statistiche'],atl:['Atleti & Biciclette','Anagrafica · Manutenzioni · Analisi'],gare:['Gare & Calendario','Stagione 2026–2027 · 42 eventi'],kpi:['KPI & Usura','Costi · Zone bici · Indici usura']};const[t,s]=info[page]||['',''];document.getElementById('pg-title').textContent=t;document.getElementById('pg-sub').textContent=s;const fns={dash:rDash,mag:rMag,atl:rAtl,gare:rGare,kpi:rKpi};document.getElementById('content').innerHTML=(fns[page]||rDash)();bindAll();}
+function render(){const info={dash:['Dashboard','Riepilogo stagione'],mag:['Magazzino','Catalogo · Movimenti · Reintegro · Statistiche'],atl:['Atleti & Biciclette','Anagrafica · Manutenzioni · Analisi'],ruote:['Ruote','12 coppie · Stagione 2026/27'],gare:['Gare & Calendario','Stagione 2026–2027 · 42 eventi'],kpi:['KPI & Usura','Costi · Zone bici · Indici usura']};const[t,s]=info[page]||['',''];document.getElementById('pg-title').textContent=t;document.getElementById('pg-sub').textContent=s;if(page==='ruote'){rRuote();bindAll();return;}const fns={dash:rDash,mag:rMag,atl:rAtl,gare:rGare,kpi:rKpi};document.getElementById('content').innerHTML=(fns[page]||rDash)();bindAll();}
 function bindAll(){document.querySelectorAll('.mbg').forEach(el=>{el.onclick=e=>{if(e.target===el)el.classList.remove('open');};});}
 
 function spesaTot(){return D.movimenti.filter(m=>m.tipo==='ingresso').reduce((a,m)=>{const cp=comp(m.cid);return a+(cp?cp.costo*m.qty:0);},0);}
@@ -1380,6 +1549,263 @@ function importJSON(){
     r.readAsText(f);
   };
   inp.click();
+}
+
+// === RUOTE ===
+const PNEU_TIPO={asciutto:{label:'Asciutto',emoji:'☀️',cls:'tipo-UCI'},medio:{label:'Medio',emoji:'🌤️',cls:'tipo-NAZ'},fango:{label:'Fango',emoji:'🌧️',cls:'tipo-INT'}};
+const CAUSA_SOST={scelta_tecnica:{label:'Scelta tecnica',emoji:'🔧'},usura_minima:{label:'Usura minima',emoji:'🟢'},usura_media:{label:'Usura media',emoji:'🟡'},usura_massima:{label:'Usura massima',emoji:'🔴'},danneggiamento:{label:'Danneggiamento',emoji:'💥'}};
+
+function rRuote(){
+  const t=tabs['ruote']||0;
+  document.getElementById('pg-title').textContent='Ruote';
+  document.getElementById('pg-sub').textContent='12 coppie · Stagione 2026/27';
+  let h=`<div class="tabs"><button class="tab${t===0?' act':''}" onclick="tabs.ruote=0;render()">🔵 Cerchi</button><button class="tab${t===1?' act':''}" onclick="tabs.ruote=1;render()">🏷️ Pneumatici</button><button class="tab${t===2?' act':''}" onclick="tabs.ruote=2;render()">📋 Assegnazioni</button></div>`;
+  if(t===0) h+=rRuoteGrid();
+  else if(t===1) h+=rRuotePneu();
+  else h+=rRuoteAss();
+  document.getElementById('content').innerHTML=h;
+}
+
+function compCell(obj){
+  if(!obj||(!obj.marca&&!obj.spec&&!obj.codMag))return'<span style="color:#d1d5db;font-size:11px">—</span>';
+  let t='';
+  if(obj.marca)t+=`<div style="font-weight:600;font-size:12px">${esc(obj.marca)}</div>`;
+  if(obj.spec)t+=`<div style="font-size:11px;color:#64748b">${esc(obj.spec)}</div>`;
+  if(obj.codMag)t+=`<div style="font-size:10px;color:#94a3b8;font-family:monospace">${esc(obj.codMag)}</div>`;
+  return t;
+}
+function rRuoteGrid(){
+  let rows='';
+  (D.ruote||[]).forEach(r=>{
+    const ant=r.ant||{};
+    const pst=r.pst||{};
+    const ultimoPneu=(D.storicoPneumatici||[]).filter(p=>p.ruotaId===r.id).sort((a,b)=>b.data.localeCompare(a.data))[0];
+    const assAtt=(D.assegnazioniRuote||[]).filter(a=>a.ruotaId===r.id);
+    const atlLabel=assAtt.length?assAtt.map(a=>{const at=ath(a.atletaId);return at?at.nome:'?';}).join(', '):'<span style="color:#d1d5db">—</span>';
+    const tipoInfo=ultimoPneu?PNEU_TIPO[ultimoPneu.tipo]||{}:{};
+    const pneuLabel=ultimoPneu?`${tipoInfo.emoji||''} ${esc((ultimoPneu.marca||'')+' '+(ultimoPneu.modello||'')).trim()}`:'<span style="color:#d1d5db;font-size:11px">—</span>';
+    const antModello=(ant.marca||ant.modello)?`<div style="font-weight:600;font-size:12px">${esc(ant.marca||'')} ${esc(ant.modello||'')}</div>`:'<span style="color:#d1d5db;font-size:11px">Da configurare</span>';
+    const pstModello=(pst.marca||pst.modello)?`<div style="font-weight:600;font-size:12px">${esc(pst.marca||'')} ${esc(pst.modello||'')}</div>`:'<span style="color:#d1d5db;font-size:11px">Da configurare</span>';
+    rows+=`<tr style="border-top:2px solid #e4e9ef">
+      <td rowspan="2" style="vertical-align:middle;text-align:center"><span style="font-size:16px;font-weight:900;color:#ff6b35">${r.id}</span><div style="font-size:11px;font-weight:600;color:#374151;margin-top:2px">${esc(r.nome||'')}</div>${r.note?`<div style="font-size:10px;color:#94a3b8;margin-top:1px">${esc(r.note)}</div>`:''}</td>
+      <td><span style="font-size:10px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:1px 6px;border-radius:4px">🔵 ANT</span></td>
+      <td>${antModello}</td>
+      <td>${compCell(ant.cuscinetti)}</td>
+      <td>${compCell(ant.disco)}</td>
+      <td><span style="color:#d1d5db;font-size:11px">—</span></td>
+      <td><span style="color:#d1d5db;font-size:11px">—</span></td>
+      <td rowspan="2" style="vertical-align:middle;font-size:12px">${atlLabel}</td>
+      <td rowspan="2" style="vertical-align:middle;font-size:12px">${pneuLabel}</td>
+      <td rowspan="2" style="vertical-align:middle"><button class="btn-ico" onclick="initRuota('${r.id}')" title="Modifica">✏️</button></td>
+    </tr>
+    <tr>
+      <td><span style="font-size:10px;font-weight:700;color:#dc2626;background:#fee2e2;padding:1px 6px;border-radius:4px">🔴 PST</span></td>
+      <td>${pstModello}</td>
+      <td>${compCell(pst.cuscinetti)}</td>
+      <td>${compCell(pst.disco)}</td>
+      <td>${compCell(pst.movimenti)}</td>
+      <td>${compCell(pst.corone)}</td>
+    </tr>`;
+  });
+  return`<div class="tw"><table>
+  <thead><tr>
+    <th style="width:52px;text-align:center">Coppia</th>
+    <th style="width:40px"></th>
+    <th>Mozzo / Modello</th>
+    <th>Cuscinetti</th>
+    <th>Disco</th>
+    <th>Movimenti</th>
+    <th>Cassetta</th>
+    <th>👤 Atleta</th>
+    <th>🏷️ Ultimo pneu</th>
+    <th></th>
+  </tr></thead>
+  <tbody>${rows}</tbody></table></div>`;
+}
+
+function rRuotePneu(){
+  const rows=(D.storicoPneumatici||[]).slice().sort((a,b)=>b.data.localeCompare(a.data));
+  let h=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn bp" onclick="initPneu('')">+ Registra Pneumatico</button></div>`;
+  if(!rows.length) return h+`<div class="empty-state"><div style="font-size:32px">🏷️</div><div>Nessun pneumatico registrato</div><div style="font-size:12px;color:#7a8ba0">Usa il bottone per registrare il primo montaggio</div></div>`;
+  h+=`<table><thead><tr><th>Data</th><th>Coppia</th><th>Atleta</th><th>Gara</th><th>Tipo</th><th>Pneumatico</th><th>Causa</th><th></th></tr></thead><tbody>`;
+  rows.forEach(p=>{
+    const tp=PNEU_TIPO[p.tipo]||{emoji:'',label:p.tipo};
+    const ca=p.causaSostituzione?CAUSA_SOST[p.causaSostituzione]||{emoji:'',label:p.causaSostituzione}:{emoji:'',label:'—'};
+    const at=ath(p.atletaId);const atLabel=at?at.nome:'—';
+    const g=p.garaId?D.gare.find(x=>x.id===p.garaId):null;
+    const gLabel=g?`${g.nome} ${fd(g.data)}`:'—';
+    const faseLabel=p.fase==='pre'?'Pre':'Post';
+    h+=`<tr>
+      <td>${fd(p.data)}</td>
+      <td><strong>${p.ruotaId}</strong></td>
+      <td>${atLabel}</td>
+      <td style="font-size:11px">${gLabel}</td>
+      <td><span class="b ${(PNEU_TIPO[p.tipo]||{}).cls||''}">${tp.emoji} ${tp.label}</span> <span style="font-size:10px;color:#7a8ba0">${faseLabel}</span></td>
+      <td style="font-size:12px">${p.marca||''} ${p.modello||''}</td>
+      <td style="font-size:11px">${ca.emoji} ${ca.label}</td>
+      <td><button class="btn bs sm" onclick="initPneu('${p.id}')">✏️</button><button class="btn bd sm" onclick="delPneu('${p.id}')">🗑</button></td>
+    </tr>`;
+  });
+  h+=`</tbody></table>`;
+  return h;
+}
+
+function rRuoteAss(){
+  let h=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn bp" onclick="initAssRuo('')">+ Nuova Assegnazione</button></div>`;
+  const rows=(D.assegnazioniRuote||[]).slice();
+  if(!rows.length) return h+`<div class="empty-state"><div style="font-size:32px">📋</div><div>Nessuna assegnazione</div><div style="font-size:12px;color:#7a8ba0">Assegna le ruote agli atleti per ogni gara</div></div>`;
+  h+=`<table><thead><tr><th>Gara</th><th>Data</th><th>Atleta</th><th>Coppia</th><th>Note</th><th></th></tr></thead><tbody>`;
+  rows.sort((a,b)=>{
+    const ga=D.gare.find(x=>x.id===a.garaId);const gb=D.gare.find(x=>x.id===b.garaId);
+    return (ga?.data||'').localeCompare(gb?.data||'');
+  }).forEach(a=>{
+    const g=D.gare.find(x=>x.id===a.garaId);
+    const at=ath(a.atletaId);
+    h+=`<tr>
+      <td><strong>${g?g.nome:'—'}</strong></td>
+      <td>${g?fd(g.data):'—'}</td>
+      <td>${at?at.nome+' '+at.cogn:'—'}</td>
+      <td><strong>${a.ruotaId}</strong></td>
+      <td style="font-size:12px;color:#7a8ba0">${a.note||'—'}</td>
+      <td><button class="btn bs sm" onclick="initAssRuo('${a.id}')">✏️</button><button class="btn bd sm" onclick="delAssRuo('${a.id}')">🗑</button></td>
+    </tr>`;
+  });
+  h+=`</tbody></table>`;
+  return h;
+}
+
+function initRuota(id){
+  const r=(D.ruote||[]).find(x=>x.id===id)||{id,note:'',ant:{marca:'',modello:'',cuscinetti:{},disco:{}},pst:{marca:'',modello:'',cuscinetti:{},movimenti:{},disco:{},corone:{}}};
+  const ant=r.ant||{};const pst=r.pst||{};
+  document.getElementById('mr-id').value=r.id;
+  document.getElementById('mr-nome').value=r.nome||'';
+  document.getElementById('mr-note').value=r.note||'';
+  document.getElementById('mr-title').textContent=(r.nome||r.id)+' — '+r.id;
+  // ANT
+  document.getElementById('mr-ant-marca').value=ant.marca||'';
+  document.getElementById('mr-ant-modello').value=ant.modello||'';
+  const ac=ant.cuscinetti||{};document.getElementById('mr-ant-cus-marca').value=ac.marca||'';document.getElementById('mr-ant-cus-spec').value=ac.spec||'';document.getElementById('mr-ant-cus-cod').value=ac.codMag||'';
+  const ad=ant.disco||{};document.getElementById('mr-ant-disc-marca').value=ad.marca||'';document.getElementById('mr-ant-disc-spec').value=ad.spec||'';document.getElementById('mr-ant-disc-cod').value=ad.codMag||'';
+  // PST
+  document.getElementById('mr-pst-marca').value=pst.marca||'';
+  document.getElementById('mr-pst-modello').value=pst.modello||'';
+  const pc=pst.cuscinetti||{};document.getElementById('mr-pst-cus-marca').value=pc.marca||'';document.getElementById('mr-pst-cus-spec').value=pc.spec||'';document.getElementById('mr-pst-cus-cod').value=pc.codMag||'';
+  const pm=pst.movimenti||{};document.getElementById('mr-pst-mov-marca').value=pm.marca||'';document.getElementById('mr-pst-mov-spec').value=pm.spec||'';document.getElementById('mr-pst-mov-cod').value=pm.codMag||'';
+  const pd=pst.disco||{};document.getElementById('mr-pst-disc-marca').value=pd.marca||'';document.getElementById('mr-pst-disc-spec').value=pd.spec||'';document.getElementById('mr-pst-disc-cod').value=pd.codMag||'';
+  const co=pst.corone||{};document.getElementById('mr-pst-cor-marca').value=co.marca||'';document.getElementById('mr-pst-cor-spec').value=co.spec||'';document.getElementById('mr-pst-cor-cod').value=co.codMag||'';
+  openM('modal-ruota');
+}
+
+function saveRuota(){
+  const id=document.getElementById('mr-id').value;
+  const idx=(D.ruote||[]).findIndex(x=>x.id===id);if(idx===-1)return;
+  const r=D.ruote[idx];
+  D.ruote[idx]={
+    id,
+    nome:document.getElementById('mr-nome').value.trim()||r.nome||id,
+    note:document.getElementById('mr-note').value.trim(),
+    ant:{
+      marca:document.getElementById('mr-ant-marca').value.trim(),
+      modello:document.getElementById('mr-ant-modello').value.trim(),
+      cuscinetti:{marca:document.getElementById('mr-ant-cus-marca').value.trim(),spec:document.getElementById('mr-ant-cus-spec').value.trim(),codMag:document.getElementById('mr-ant-cus-cod').value.trim()},
+      disco:{marca:document.getElementById('mr-ant-disc-marca').value.trim(),spec:document.getElementById('mr-ant-disc-spec').value.trim(),codMag:document.getElementById('mr-ant-disc-cod').value.trim()},
+    },
+    pst:{
+      marca:document.getElementById('mr-pst-marca').value.trim(),
+      modello:document.getElementById('mr-pst-modello').value.trim(),
+      cuscinetti:{marca:document.getElementById('mr-pst-cus-marca').value.trim(),spec:document.getElementById('mr-pst-cus-spec').value.trim(),codMag:document.getElementById('mr-pst-cus-cod').value.trim()},
+      movimenti:{marca:document.getElementById('mr-pst-mov-marca').value.trim(),spec:document.getElementById('mr-pst-mov-spec').value.trim(),codMag:document.getElementById('mr-pst-mov-cod').value.trim()},
+      disco:{marca:document.getElementById('mr-pst-disc-marca').value.trim(),spec:document.getElementById('mr-pst-disc-spec').value.trim(),codMag:document.getElementById('mr-pst-disc-cod').value.trim()},
+      corone:{marca:document.getElementById('mr-pst-cor-marca').value.trim(),spec:document.getElementById('mr-pst-cor-spec').value.trim(),codMag:document.getElementById('mr-pst-cor-cod').value.trim()},
+    },
+  };
+  save();closeM('modal-ruota');render();
+}
+
+function initPneu(id){
+  if(!D.storicoPneumatici)D.storicoPneumatici=[];
+  const p=id?D.storicoPneumatici.find(x=>x.id===id):null;
+  document.getElementById('mpn-title').textContent=p?'Modifica Pneumatico':'Registra Pneumatico';
+  document.getElementById('mpn-id').value=id||'';
+  document.getElementById('mpn-data').value=p?.data||tod();
+  document.getElementById('mpn-fase').value=p?.fase||'pre';
+  document.getElementById('mpn-tipo').value=p?.tipo||'medio';
+  document.getElementById('mpn-marca').value=p?.marca||'';
+  document.getElementById('mpn-modello').value=p?.modello||'';
+  document.getElementById('mpn-cod').value=p?.codMag||'';
+  document.getElementById('mpn-causa').value=p?.causaSostituzione||'';
+  document.getElementById('mpn-note').value=p?.note||'';
+  const rSel=document.getElementById('mpn-ruota');
+  rSel.innerHTML=(D.ruote||[]).map(r=>`<option value="${r.id}"${p?.ruotaId===r.id?' selected':''}>${r.id}${r.marca?' — '+r.marca+' '+r.modello:''}</option>`).join('');
+  const gSel=document.getElementById('mpn-gara');
+  gSel.innerHTML='<option value="">— nessuna —</option>'+(D.gare||[]).slice().sort((a,b)=>a.data.localeCompare(b.data)).map(g=>`<option value="${g.id}"${p?.garaId===g.id?' selected':''}>${g.nome} (${fd(g.data)})</option>`).join('');
+  const aSel=document.getElementById('mpn-atl');
+  aSel.innerHTML='<option value="">— nessuno —</option>'+(D.atleti||[]).map(a=>`<option value="${a.id}"${p?.atletaId===a.id?' selected':''}>${a.nome} ${a.cogn}</option>`).join('');
+  openM('modal-pneu');
+}
+
+function savePneu(){
+  if(!D.storicoPneumatici)D.storicoPneumatici=[];
+  const id=document.getElementById('mpn-id').value||gid('SP');
+  const obj={
+    id,
+    data:document.getElementById('mpn-data').value,
+    ruotaId:document.getElementById('mpn-ruota').value,
+    garaId:document.getElementById('mpn-gara').value,
+    atletaId:document.getElementById('mpn-atl').value,
+    fase:document.getElementById('mpn-fase').value,
+    tipo:document.getElementById('mpn-tipo').value,
+    marca:document.getElementById('mpn-marca').value.trim(),
+    modello:document.getElementById('mpn-modello').value.trim(),
+    codMag:document.getElementById('mpn-cod').value.trim(),
+    causaSostituzione:document.getElementById('mpn-causa').value,
+    note:document.getElementById('mpn-note').value.trim(),
+  };
+  const idx=D.storicoPneumatici.findIndex(x=>x.id===id);
+  if(idx>=0)D.storicoPneumatici[idx]=obj;else D.storicoPneumatici.push(obj);
+  save();closeM('modal-pneu');render();
+}
+
+function delPneu(id){
+  if(!confirm('Eliminare questo record pneumatico?'))return;
+  D.storicoPneumatici=(D.storicoPneumatici||[]).filter(x=>x.id!==id);
+  save();render();
+}
+
+function initAssRuo(id){
+  if(!D.assegnazioniRuote)D.assegnazioniRuote=[];
+  const a=id?D.assegnazioniRuote.find(x=>x.id===id):null;
+  document.getElementById('mar-title').textContent=a?'Modifica Assegnazione':'Nuova Assegnazione';
+  document.getElementById('mar-id').value=id||'';
+  document.getElementById('mar-note').value=a?.note||'';
+  const gSel=document.getElementById('mar-gara');
+  gSel.innerHTML=(D.gare||[]).slice().sort((x,y)=>x.data.localeCompare(y.data)).map(g=>`<option value="${g.id}"${a?.garaId===g.id?' selected':''}>${g.nome} (${fd(g.data)})</option>`).join('');
+  const aSel=document.getElementById('mar-atl');
+  aSel.innerHTML=(D.atleti||[]).map(at=>`<option value="${at.id}"${a?.atletaId===at.id?' selected':''}>${at.nome} ${at.cogn}</option>`).join('');
+  const rSel=document.getElementById('mar-ruota');
+  rSel.innerHTML=(D.ruote||[]).map(r=>`<option value="${r.id}"${a?.ruotaId===r.id?' selected':''}>${r.id}${r.marca?' — '+r.marca:''}</option>`).join('');
+  openM('modal-assruo');
+}
+
+function saveAssRuo(){
+  if(!D.assegnazioniRuote)D.assegnazioniRuote=[];
+  const id=document.getElementById('mar-id').value||gid('AR');
+  const obj={
+    id,
+    garaId:document.getElementById('mar-gara').value,
+    atletaId:document.getElementById('mar-atl').value,
+    ruotaId:document.getElementById('mar-ruota').value,
+    note:document.getElementById('mar-note').value.trim(),
+  };
+  const idx=D.assegnazioniRuote.findIndex(x=>x.id===id);
+  if(idx>=0)D.assegnazioniRuote[idx]=obj;else D.assegnazioniRuote.push(obj);
+  save();closeM('modal-assruo');render();
+}
+
+function delAssRuo(id){
+  if(!confirm('Eliminare questa assegnazione?'))return;
+  D.assegnazioniRuote=(D.assegnazioniRuote||[]).filter(x=>x.id!==id);
+  save();render();
 }
 
 // === GOOGLE DRIVE SYNC (v1.5) ===
