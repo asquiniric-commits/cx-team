@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CX Manager">
+<meta name="theme-color" content="#151f2b">
+<title>CX Team Manager</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#f0f2f5;display:flex;height:100vh;overflow:hidden;color:#1e2a3a}
+/* ── SIDEBAR DESKTOP ── */
+#sb{width:232px;background:#151f2b;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto}
+.sb-logo{padding:20px 18px;background:#0f1722}
+.sb-logo-main{font-size:16px;font-weight:800;color:#ff6b35}
+.sb-logo-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
+.sb-sec{padding:14px 18px 5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.25)}
+.sb-it{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.58);border-left:3px solid transparent;transition:all .15s}
+.sb-it:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.9)}
+.sb-it.act{color:#ff6b35;background:rgba(255,107,53,.12);border-left-color:#ff6b35}
+.sb-it.dis{opacity:.3;cursor:not-allowed;pointer-events:none}
+.sb-ic{font-size:15px;width:18px;text-align:center}
+.sb-tag{margin-left:auto;font-size:10px;background:rgba(255,255,255,.09);padding:1px 7px;border-radius:20px;color:rgba(255,255,255,.3)}
+.sb-foot{margin-top:auto;padding:12px 18px;font-size:11px;color:rgba(255,255,255,.2);border-top:1px solid rgba(255,255,255,.06)}
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:white;padding:13px 24px;border-bottom:1px solid #e4e9ef;display:flex;align-items:center;gap:16px;flex-shrink:0}
+#pg-title{font-size:18px;font-weight:700}
+#pg-sub{font-size:12px;color:#7a8ba0;margin-top:1px}
+.tb-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.season-pill{background:rgba(255,107,53,.12);color:#ff6b35;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+#content{flex:1;overflow-y:auto;padding:20px 24px;padding-bottom:20px}
+/* ── GOOGLE DRIVE SYNC BUTTON ── */
+#sync-btn{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s;background:#f0f3f6;color:#374151}
+#sync-btn:hover{background:#e4e9ef}
+#sync-btn.syncing{background:#dbeafe;color:#1d4ed8}
+#sync-btn.synced{background:#dcfce7;color:#16a34a}
+#sync-btn.error{background:#fee2e2;color:#dc2626}
+#sync-btn.signedin{background:rgba(255,107,53,.1);color:#ff6b35}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+/* ── BOTTOM NAV (MOBILE) ── */
+#bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:white;border-top:1px solid #e4e9ef;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:6px 4px;border:none;background:none;color:#7a8ba0;font-size:11px;font-weight:500;transition:all .15s;position:relative}
+.bn-item:active{transform:scale(.95)}
+.bn-item.act{color:#ff6b35}
+.bn-item.act .bn-ico{background:rgba(255,107,53,.12);border-radius:10px;padding:2px 12px}
+.bn-ico{font-size:20px;line-height:1.2}
+/* ── CARDS / TABLES ── */
+.tabs{display:flex;background:white;border-bottom:1px solid #e4e9ef;margin:-20px -24px 20px;overflow-x:auto;flex-shrink:0}
+.tab{padding:11px 14px;font-size:12.5px;cursor:pointer;color:#7a8ba0;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.tab:hover{color:#1e2a3a}.tab.act{color:#ff6b35;border-bottom-color:#ff6b35;font-weight:600}
+.srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:14px;margin-bottom:18px}
+.scard{background:white;border-radius:10px;padding:15px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.slbl{font-size:11px;color:#7a8ba0;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.sval{font-size:22px;font-weight:800;margin-top:5px}
+.ssub{font-size:12px;color:#7a8ba0;margin-top:2px}
+.c-or{color:#ff6b35}.c-gr{color:#22c55e}.c-rd{color:#ef4444}.c-bl{color:#3b82f6}.c-pu{color:#8b5cf6}.c-tl{color:#0d9488}
+.card{background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:16px;overflow:hidden}
+.ch{padding:13px 18px;border-bottom:1px solid #f0f3f6;display:flex;align-items:center;justify-content:space-between}
+.ch-t{font-size:14px;font-weight:600}.cb{padding:18px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{background:#f8f9fb;padding:8px 11px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#7a8ba0;border-bottom:1px solid #e4e9ef;white-space:nowrap}
+tbody td{padding:9px 11px;border-bottom:1px solid #f2f4f7;color:#374151;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbfc}
+.b{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:500;white-space:nowrap}
+.bg{background:#dcfce7;color:#16a34a}.by{background:#fef9c3;color:#a16207}.br{background:#fee2e2;color:#dc2626}
+.bb{background:#dbeafe;color:#1d4ed8}.bgy{background:#f1f5f9;color:#64748b}.bo{background:#ffedd5;color:#c2410c}
+.bpu{background:#ede9fe;color:#6d28d9}.btl{background:#ccfbf1;color:#0f766e}.bpk{background:#fce7f3;color:#9d174d}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.bp{background:#ff6b35;color:white}.bp:hover{background:#e85f2a}
+.bs{background:#f0f3f6;color:#374151}.bs:hover{background:#e4e9ef}
+.bd{background:#fee2e2;color:#dc2626}.bd:hover{background:#fecaca}
+.bgreen{background:#dcfce7;color:#16a34a}.bgreen:hover{background:#bbf7d0}
+.sm{padding:5px 10px;font-size:12.5px}.xs{padding:2px 7px;font-size:12px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.fg{margin-bottom:12px}.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px}
+input,select,textarea{width:100%;padding:8px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:13.5px;color:#1e2a3a;background:white;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#ff6b35;box-shadow:0 0 0 3px rgba(255,107,53,.1)}
+textarea{resize:vertical;min-height:56px}
+input[type=file]{padding:4px}
+input[type=checkbox]{width:auto;margin:0}
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.mbg.open{display:flex}
+.modal{background:white;border-radius:14px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-lg{max-width:720px}.modal-sm{max-width:400px}
+.mh{padding:15px 22px;border-bottom:1px solid #f0f3f6;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1}
+.mh-t{font-size:15px;font-weight:700}
+.mcl{width:28px;height:28px;border-radius:6px;border:none;background:#f0f3f6;cursor:pointer;font-size:13px}
+.mcl:hover{background:#e4e9ef}
+.mb{padding:20px 22px}
+.mf{padding:12px 22px;border-top:1px solid #f0f3f6;display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:white}
+.al{padding:10px 13px;border-radius:8px;font-size:13px;margin-bottom:13px;display:flex;align-items:flex-start;gap:9px}
+.aw{background:#fefce8;color:#854d0e;border-left:4px solid #eab308}
+.ai{background:#eff6ff;color:#1e40af;border-left:4px solid #3b82f6}
+.ae{background:#fee2e2;color:#991b1b;border-left:4px solid #ef4444}
+.as{background:#f0fdf4;color:#166534;border-left:4px solid #22c55e}
+.prog{background:#f0f3f6;border-radius:10px;height:7px;overflow:hidden}
+.pb{height:100%;border-radius:10px;transition:width .4s}
+.pg{background:#22c55e}.po{background:#ff6b35}.pr{background:#ef4444}.pbl{background:#3b82f6}.ppu{background:#8b5cf6}
+/* ATHLETE */
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.acard{background:white;border-radius:10px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;text-align:center;border:2px solid transparent}
+.acard:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.1)}
+.av{width:46px;height:46px;border-radius:50%;background:#1e2a3a;color:#ff6b35;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.aname{font-size:15px;font-weight:700}.asub{font-size:12px;color:#7a8ba0;margin-top:1px}
+.astats{display:flex;justify-content:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f3f6}
+.asv{font-size:14px;font-weight:700;color:#ff6b35}.asl{font-size:10px;color:#7a8ba0;text-transform:uppercase}
+.brow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bcrd{background:#f8f9fb;border-radius:10px;padding:14px;border:2px solid transparent;cursor:pointer;transition:all .15s}
+.bcrd:hover{border-color:#ff6b35;background:white}
+.bnum{font-size:11px;font-weight:700;text-transform:uppercase;color:#ff6b35;margin-bottom:3px}
+.bname{font-size:14px;font-weight:700}.bdetail{font-size:12px;color:#7a8ba0;margin-top:2px}
+.bkm{font-size:20px;font-weight:800;margin-top:7px}.bkml{font-size:11px;color:#7a8ba0}
+.mi{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #f2f4f7}
+.mid{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.ci{display:flex;align-items:center;gap:8px;margin-bottom:7px;background:#f8f9fb;padding:7px 10px;border-radius:7px}
+.ci select{flex:3}.ci input[type=number]{flex:1;min-width:55px;max-width:75px}
+.fbar{display:flex;gap:9px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.fbar input,.fbar select{width:auto;flex:1;min-width:120px}
+.empty{text-align:center;padding:36px 20px}
+.empty .ico{font-size:40px;margin-bottom:12px}
+.empty .et{font-size:15px;font-weight:600;color:#374151}
+.empty .es{font-size:13px;color:#7a8ba0;margin-top:4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.sec-title{font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 12px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:#e4e9ef}
+.ap-card{background:white;border-radius:10px;padding:15px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.06);border-left:4px solid #e4e9ef}
+.ap-card.danger{border-left-color:#ef4444}.ap-card.warning{border-left-color:#eab308}
+.zona-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600}
+.zA{background:#fef3c7;color:#92400e}.zB{background:#fee2e2;color:#991b1b}.zC{background:#dbeafe;color:#1e40af}
+.zD{background:#ede9fe;color:#5b21b6}.zE{background:#fff1f2;color:#881337}.zF{background:#fdf4ff;color:#701a75}
+.zG{background:#f0fdf4;color:#14532d}.zH{background:#f0fdf4;color:#166534}.zI{background:#ecfeff;color:#155e75}
+.cod-badge{display:inline-flex;align-items:center;font-family:monospace;font-size:12px;font-weight:700;background:#1e2a3a;color:#ff6b35;padding:3px 8px;border-radius:5px;letter-spacing:.5px}
+.cod-preview-box{background:#0f1722;border-radius:10px;padding:14px;text-align:center;margin-bottom:14px}
+.cod-preview-big{font-family:monospace;font-size:20px;font-weight:800;color:#ff6b35;letter-spacing:1px}
+.cod-preview-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+.qe-panel{background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:18px;overflow:hidden}
+.qe-header{padding:13px 18px;background:#1e2a3a;display:flex;align-items:center;justify-content:space-between}
+.qe-header-title{color:white;font-size:14px;font-weight:700}
+.qe-mode-btn{padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;transition:all .15s}
+.qe-mode-btn.active{background:#ff6b35;border-color:#ff6b35;color:white}
+.qe-body{padding:16px}
+.qe-search-wrap{position:relative;margin-bottom:12px}
+.qe-search{width:100%;padding:11px 15px;border:2px solid #e4e9ef;border-radius:10px;font-size:14px}
+.qe-search:focus{outline:none;border-color:#ff6b35}
+.qe-results{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e4e9ef;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;max-height:190px;overflow-y:auto;display:none}
+.qe-result-item{padding:9px 13px;cursor:pointer;border-bottom:1px solid #f2f4f7}
+.qe-result-item:hover{background:#f8f9fb}
+.qe-result-code{font-family:monospace;font-size:12px;color:#ff6b35;font-weight:700}
+.qe-result-desc{font-size:13px;font-weight:600}
+.qe-result-giac{font-size:12px;color:#7a8ba0}
+.qe-selected{background:#f8f9fb;border-radius:8px;padding:11px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.qe-tipo-row{display:flex;gap:10px;margin-bottom:12px}
+.qe-tipo-btn{flex:1;padding:11px;border-radius:9px;border:2px solid #e4e9ef;background:white;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.qe-tipo-btn.sel-ing{background:#dcfce7;border-color:#22c55e;color:#16a34a}
+.qe-tipo-btn.sel-usc{background:#fee2e2;border-color:#dc2626;color:#dc2626}
+.qe-submit{width:100%;padding:13px;border-radius:9px;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.qe-submit.ing{background:#22c55e;color:white}.qe-submit.usc{background:#ef4444;color:white}
+.gara-card{background:white;border-radius:10px;padding:14px 18px;margin-bottom:10px;box-shadow:0 1px 5px rgba(0,0,0,.06);cursor:pointer;border-left:4px solid #e4e9ef;transition:all .15s;display:flex;align-items:center;gap:14px}
+.gara-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.1);transform:translateX(2px)}
+.gara-card.conf{border-left-color:#22c55e}.gara-card.prov{border-left-color:#eab308}
+.gara-card.annul{border-left-color:#ef4444;opacity:.6}.gara-card.tba{border-left-color:#94a3b8}
+.gara-card.sel{background:#fff9f7;border-left-color:#ff6b35}
+.gara-date-box{text-align:center;min-width:48px;flex-shrink:0}
+.gara-date-d{font-size:20px;font-weight:800;color:#1e2a3a;line-height:1}
+.gara-date-m{font-size:11px;color:#7a8ba0;text-transform:uppercase;font-weight:600}
+.gara-info{flex:1}.gara-nome{font-size:14px;font-weight:700;color:#1e2a3a}
+.gara-sub{font-size:12px;color:#7a8ba0;margin-top:2px}
+.gara-tags{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.atleta-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f2f4f7}
+.atleta-row:last-child{border-bottom:none}
+.atleta-row .av-s{width:34px;height:34px;border-radius:50%;background:#1e2a3a;color:#ff6b35;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mese-header{font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.8px;padding:14px 0 8px;border-bottom:2px solid #e4e9ef;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.tipo-UCI{background:#ede9fe;color:#5b21b6}.tipo-INT{background:#dbeafe;color:#1e40af}
+.tipo-NAZ{background:#dcfce7;color:#16a34a}.tipo-GRC{background:#ffedd5;color:#c2410c}.tipo-TBA{background:#f1f5f9;color:#64748b}
+.stato-confermato{background:#dcfce7;color:#16a34a}.stato-provvisorio{background:#fef9c3;color:#a16207}
+.stato-annullato{background:#fee2e2;color:#dc2626}.stato-tba{background:#f1f5f9;color:#64748b}
+.kpi-atl-card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 8px rgba(0,0,0,.07);margin-bottom:18px}
+.kpi-zona-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.kpi-zona-label{font-size:13px;font-weight:600;min-width:165px}
+.kpi-zona-bar{flex:1}.kpi-zona-val{font-size:13px;font-weight:600;min-width:62px;text-align:right}
+.rank-item{display:flex;align-items:center;gap:12px;padding:12px 15px;background:white;border-radius:10px;margin-bottom:10px;box-shadow:0 1px 5px rgba(0,0,0,.05)}
+.rank-num{width:26px;height:26px;border-radius:50%;background:#ff6b35;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rank-num.gold{background:#f59e0b}.rank-num.silver{background:#94a3b8}.rank-num.bronze{background:#d97706}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#c0cbd6;border-radius:3px}
+/* ── DRIVE MODAL ── */
+#modal-drive .mb{line-height:1.7}
+.drive-setup-step{background:#f8f9fb;border-radius:9px;padding:13px;margin-bottom:11px;font-size:13px}
+.drive-setup-step strong{color:#1e2a3a;display:block;margin-bottom:4px}
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:768px){
+  #sb{display:none}
+  #bottom-nav{display:flex}
+  #main{height:100dvh}
+  #content{padding:12px 14px 80px}
+  .tabs{margin:-12px -14px 14px}
+  #topbar{padding:10px 14px}
+  #pg-title{font-size:15px}
+  .srow{grid-template-columns:repeat(2,1fr);gap:10px}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .fr3{grid-template-columns:1fr 1fr}
+  .agrid{grid-template-columns:repeat(2,1fr)}
+  .brow{grid-template-columns:1fr}
+  .modal{width:96%;max-height:95vh;border-radius:12px 12px 0 0;margin-top:auto;align-self:flex-end}
+  .mbg{align-items:flex-end}
+  .fr2{grid-template-columns:1fr}
+  table{font-size:12px}
+  thead th{font-size:10px;padding:6px 8px}
+  tbody td{padding:7px 8px}
+}
+@media(max-width:480px){
+  .srow{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .agrid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR DESKTOP -->
+<div id="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-main">⚙️ CX Team Manager</div>
+    <div class="sb-logo-sub">Gestione Tecnica · Stagione 26/27</div>
+  </div>
+  <div class="sb-sec">Principale</div>
+  <div class="sb-it act" onclick="nav('dash')"><span class="sb-ic">🏠</span> Dashboard</div>
+  <div class="sb-sec">Logistica</div>
+  <div class="sb-it" onclick="nav('mag')"><span class="sb-ic">📦</span> Magazzino</div>
+  <div class="sb-sec">Squadra</div>
+  <div class="sb-it" onclick="nav('atl')"><span class="sb-ic">🚴</span> Atleti &amp; Bici</div>
+  <div class="sb-it dis"><span class="sb-ic">⭕</span> Cerchi <span class="sb-tag">presto</span></div>
+  <div class="sb-sec">Calendario</div>
+  <div class="sb-it" onclick="nav('gare')"><span class="sb-ic">🏁</span> Gare &amp; Calendario</div>
+  <div class="sb-sec">Analisi</div>
+  <div class="sb-it" onclick="nav('kpi')"><span class="sb-ic">📈</span> KPI &amp; Usura</div>
+  <div class="sb-sec">Operazioni</div>
+  <div class="sb-it dis"><span class="sb-ic">📋</span> Checklist Gara <span class="sb-tag">presto</span></div>
+  <div class="sb-foot">v1.5 PWA · Fase 1 di 3</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div id="pg-title">Dashboard</div>
+      <div id="pg-sub">Riepilogo stagione</div>
+    </div>
+    <div class="tb-right">
+      <button id="sync-btn" onclick="driveClick()">
+        <span class="sync-dot"></span>
+        <span id="sync-label">Google Drive</span>
+      </button>
+      <button class="btn bs sm" onclick="exportJSON()">⬇ Export</button><button class="btn bs sm" onclick="importJSON()">⬆ Importa</button>
+      <span class="season-pill">🏁 2026–2027</span>
+    </div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<!-- BOTTOM NAV MOBILE -->
+<nav id="bottom-nav">
+  <button class="bn-item act" id="bn-dash" onclick="nav('dash')"><span class="bn-ico">🏠</span>Dashboard</button>
+  <button class="bn-item" id="bn-mag" onclick="nav('mag')"><span class="bn-ico">📦</span>Magazzino</button>
+  <button class="bn-item" id="bn-atl" onclick="nav('atl')"><span class="bn-ico">🚴</span>Atleti</button>
+  <button class="bn-item" id="bn-gare" onclick="nav('gare')"><span class="bn-ico">🏁</span>Gare</button>
+  <button class="bn-item" id="bn-kpi" onclick="nav('kpi')"><span class="bn-ico">📈</span>KPI</button>
+</nav>
+
+<!-- ══ MODALS ══ -->
+<!-- MODAL: Atleta -->
+<div class="mbg" id="modal-atl">
+  <div class="modal">
+    <div class="mh"><div class="mh-t" id="ma-title">Aggiungi Atleta</div><button class="mcl" onclick="closeM('modal-atl')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="ma-id">
+      <div class="fr2">
+        <div class="fg"><label>Nome *</label><input id="ma-nome"></div>
+        <div class="fg"><label>Cognome *</label><input id="ma-cogn"></div>
+      </div>
+      <div class="fr3">
+        <div class="fg"><label>N° Atleta</label><input type="number" id="ma-num" min="1"></div>
+        <div class="fg"><label>Anno di Nascita</label><input type="number" id="ma-anno" placeholder="2005" min="1980" max="2020"></div>
+        <div class="fg"><label>N° Licenza</label><input id="ma-licenza" placeholder="FCI / UCI"></div>
+      </div>
+      <div class="fg"><label>Categoria CX *</label>
+        <select id="ma-cat">
+          <option value="">Seleziona categoria…</option>
+          <optgroup label="Senior"><option value="Elite M">Elite M</option><option value="Elite F">Elite F</option></optgroup>
+          <optgroup label="Under 23"><option value="Under 23 M">Under 23 M</option><option value="Under 23 F">Under 23 F</option></optgroup>
+          <optgroup label="Juniores (17-18)"><option value="Juniores M">Juniores M</option><option value="Juniores F">Juniores F</option></optgroup>
+          <optgroup label="Allievi (15-16)"><option value="Allievi M">Allievi M</option><option value="Allieve F">Allieve F</option></optgroup>
+          <optgroup label="Esordienti (13-14)"><option value="Esordienti M">Esordienti M</option><option value="Esordienti F">Esordienti F</option></optgroup>
+          <optgroup label="Giovanissimi"><option value="G8 M">G8 M</option><option value="G8 F">G8 F</option><option value="G6 M">G6 M</option><option value="G6 F">G6 F</option></optgroup>
+        </select>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('modal-atl')">Annulla</button><button class="btn bp" onclick="saveAtl()">💾 Salva</button></div>
+  </div>
+</div>
+<!-- MODAL: Bici -->
+<div class="mbg" id="modal-bici">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mh-t" id="mb-title">Aggiungi Bicicletta</div><button class="mcl" onclick="closeM('modal-bici')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mb-id">
+      <div class="fr2">
+        <div class="fg"><label>Atleta *</label><select id="mb-atl"></select></div>
+        <div class="fg"><label>Bici N°</label><select id="mb-num"><option value="1">Bici 1</option><option value="2">Bici 2</option></select></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Marca *</label><input id="mb-marca" placeholder="Pinarello, Specialized…"></div>
+        <div class="fg"><label>Modello *</label><input id="mb-mod" placeholder="F9 Crossista, Crux…"></div>
+      </div>
+      <div class="fr3">
+        <div class="fg"><label>Anno</label><input type="number" id="mb-anno" placeholder="2024"></div>
+        <div class="fg"><label>Taglia</label><input id="mb-taglia" placeholder="54"></div>
+        <div class="fg"><label>Km Attuali</label><input type="number" id="mb-km" placeholder="0" min="0"></div>
+      </div>
+      <div class="fg"><label>N° Telaio / S/N</label><input id="mb-sn" placeholder="Numero seriale telaio"></div>
+      <div style="background:#f8f9fb;border-radius:8px;padding:14px;margin-top:4px">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">⚙️ Equipaggiamento</div>
+        <div class="fg"><label>Gruppo Trasmissione</label><input id="mb-gruppo" placeholder="es. Sram Force 1×12 velocità"></div>
+        <div class="fr2">
+          <div class="fg"><label>Ruote Allenamento</label><input id="mb-ruote-all" placeholder="es. Most carbonio tubeless"></div>
+          <div class="fg"><label>Ruote Gara</label><input id="mb-ruote-gara" placeholder="es. Ruote gara specifiche"></div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px"><label>Note</label><textarea id="mb-note" style="min-height:44px"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('modal-bici')">Annulla</button><button class="btn bp" onclick="saveBici()">💾 Salva</button></div>
+  </div>
+</div>
+<!-- MODAL: Manutenzione -->
+<div class="mbg" id="modal-mnt">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mh-t" id="mm-title">Registra Manutenzione</div><button class="mcl" onclick="closeM('modal-mnt')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mm-id">
+      <div class="fr2">
+        <div class="fg"><label>Bicicletta *</label><select id="mm-bici"></select></div>
+        <div class="fg"><label>Tipo *</label><select id="mm-tipo"><option value="preventiva">🔧 Preventiva</option><option value="correttiva">⚠️ Correttiva</option><option value="pre-gara">🏁 Pre-Gara</option><option value="post-gara">✅ Post-Gara</option></select></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Data *</label><input type="date" id="mm-data"></div>
+        <div class="fg"><label>Meccanico</label><input id="mm-mec" placeholder="Nome meccanico"></div>
+      </div>
+      <div class="fg"><label>Descrizione *</label><textarea id="mm-desc" placeholder="Descrivi l'intervento…"></textarea></div>
+      <div class="fr2">
+        <div class="fg"><label>Ore impiegate</label><input type="number" id="mm-ore" placeholder="1.0" step="0.5" min="0"></div>
+        <div class="fg"><label>Prossima manutenzione</label><input type="date" id="mm-prox"></div>
+      </div>
+      <div class="fg">
+        <label>Componenti utilizzati</label>
+        <div id="ci-list"></div>
+        <button class="btn bs sm" type="button" onclick="addCI()" style="margin-top:6px">+ Aggiungi componente</button>
+        <div id="zone-used" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+      <div class="fg"><label>Note</label><textarea id="mm-note" style="min-height:44px"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('modal-mnt')">Annulla</button><button class="btn bp" onclick="saveMnt()">💾 Salva</button></div>
+  </div>
+</div>
+<!-- MODAL: Gara -->
+<div class="mbg" id="modal-gara">
+  <div class="modal">
+    <div class="mh"><div class="mh-t" id="mg-title">Aggiungi Gara</div><button class="mcl" onclick="closeM('modal-gara')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mg-id">
+      <div class="fr2">
+        <div class="fg"><label>Data *</label><input type="date" id="mg-data"></div>
+        <div class="fg"><label>Tipologia</label>
+          <select id="mg-tipo">
+            <option value="INT">INT — Internazionale</option>
+            <option value="INT/GRC">INT/GRC — Int. + Gran Prix</option>
+            <option value="GRC">GRC — Gran Prix Regionale</option>
+            <option value="UCI">UCI — Coppa del Mondo / Camp.</option>
+            <option value="NAZ">NAZ — Campionato Nazionale</option>
+            <option value="INT/MASTER">INT/MASTER</option>
+            <option value="TBA">TBA — Da definire</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Nome Gara *</label><input id="mg-nome" placeholder="es. Coppa del Mondo Koksijde"></div>
+      <div class="fr2">
+        <div class="fg"><label>Luogo</label><input id="mg-luogo"></div>
+        <div class="fg"><label>Nazione</label><input id="mg-nazione"></div>
+      </div>
+      <div class="fg"><label>Stato</label>
+        <select id="mg-stato">
+          <option value="confermato">🟢 Confermata</option>
+          <option value="provvisorio">🟡 Provvisoria</option>
+          <option value="annullato">🔴 Annullata</option>
+          <option value="tba">⚫ TBA</option>
+        </select>
+      </div>
+      <div class="fg"><label>Note</label><textarea id="mg-note" style="min-height:44px"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('modal-gara')">Annulla</button><button class="btn bp" onclick="saveGara()">💾 Salva</button></div>
+  </div>
+</div>
+<!-- MODAL: Movimento -->
+<div class="mbg" id="modal-mov">
+  <div class="modal">
+    <div class="mh"><div class="mh-t">Registra Movimento</div><button class="mcl" onclick="closeM('modal-mov')">✕</button></div>
+    <div class="mb">
+      <div class="fr2">
+        <div class="fg"><label>Tipo *</label><select id="mv-tipo" onchange="toggleAtlF()"><option value="ingresso">🟢 Ingresso</option><option value="uscita">🔴 Uscita</option></select></div>
+        <div class="fg"><label>Data *</label><input type="date" id="mv-data"></div>
+      </div>
+      <div class="fg"><label>Componente *</label><select id="mv-comp"></select></div>
+      <div class="fr2">
+        <div class="fg"><label>Quantità *</label><input type="number" id="mv-qty" min="1" placeholder="1"></div>
+        <div class="fg"><label>Meccanico</label><input id="mv-mec" placeholder="Nome"></div>
+      </div>
+      <div class="fg"><label>Causale</label>
+        <select id="mv-caus-sel" onchange="toggleCustomCaus()"><option>Acquisto stagionale</option><option>Reintegro scorte</option><option>Sostituzione preventiva</option><option>Sostituzione post-gara</option><option>Rottura in gara</option><option>Rottura in allenamento</option><option>Scaduto/deteriorato</option><option value="_altro">✏️ Altro…</option></select>
+        <input id="mv-caus-custom" placeholder="Specifica causale…" style="margin-top:6px;display:none">
+      </div>
+      <div class="fg" id="mv-atl-f" style="display:none"><label>Atleta</label><select id="mv-atl"><option value="">— nessuno —</option></select></div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('modal-mov')">Annulla</button><button class="btn bp" onclick="saveMov()">💾 Registra</button></div>
+  </div>
+</div>
+<!-- MODAL: Storico Prezzi -->
+<div class="mbg" id="modal-ph">
+  <div class="modal modal-sm">
+    <div class="mh"><div class="mh-t" id="ph-title">Storico Prezzi</div><button class="mcl" onclick="closeM('modal-ph')">✕</button></div>
+    <div class="mb"><div id="ph-body"></div></div>
+    <div class="mf"><button class="btn bs" onclick="closeM('modal-ph')">Chiudi</button></div>
+  </div>
+</div>
+<!-- MODAL: Google Drive Setup -->
+<div class="mbg" id="modal-drive">
+  <div class="modal modal-sm" id="modal-drive">
+    <div class="mh"><div class="mh-t">☁️ Google Drive Sync</div><button class="mcl" onclick="closeM('modal-drive')">✕</button></div>
+    <div class="mb" id="drive-modal-body">
+      <div id="drive-status-area"></div>
+    </div>
+    <div class="mf" id="drive-modal-foot"></div>
+  </div>
+</div>
+<script>
+const AREE={A:{nome:'Trasmissione',emoji:'⛓️'},B:{nome:'Freni',emoji:'🛑'},C:{nome:'Ruote',emoji:'🔵'},D:{nome:'Mov. Centrale',emoji:'🔩'},E:{nome:'Sterzo',emoji:'🔄'},F:{nome:'Sella',emoji:'🪑'},G:{nome:'Struttura',emoji:'🔧'},H:{nome:'Consumabili',emoji:'🧴'},I:{nome:'Elettronico',emoji:'⚡'}};
+const SLOTS={'A-1':'Catene','A-2':'Cassette & corone','A-3':'Deragliatori post.','A-4':'Deragliatori ant. & leve','A-5':'Pedivelle & guarnitura','B-1':'Pastiglie freno','B-2':'Dischi / Rotori','B-3':'Cavi freno','B-4':'Guaine','B-5':'Leve freno','B-6':'Comp. idraulici','C-1':'Tubolari','C-2':'Valvole & acc. ruota','C-3':'Raggi & nippli','C-4':'Mozzi','D-1':'Cuscinetti BB','D-2':'Calotte & acc. BB','E-1':'Cuffie sterzo','E-2':'Manubrio & attacco','E-3':'Morsetti & acc. sterzo','F-1':'Selle','F-2':'Reggisella & fascette','G-1':'Viteria strutturale','G-2':'Perni & passanti','G-3':'Accessori telaio','H-1':'Lubrificanti catena','H-2':'Grassi & anti-seize','H-3':'Detergenti','H-4':'Nastri & sigillanti','H-5':'Kit pulizia','I-1':'Batterie','I-2':'Caricatori & cavi','I-3':'Sensori','I-4':'Computer / Head unit','I-5':'Moduli & junction'};
+const SUBCATS={MEC:{VIT:'Viteria',CUS:'Cuscinetti',PER:'Perni',CAV:'Cavi',GUA:'Guaine',CAT:'Catena',CAS:'Cassetta',COR:'Corona',DER:'Deragliatore',PED:'Pedali',DIS:'Disco/Rotore',PAD:'Pastiglie',TUB:'Tubolare',CER:'Cerchio',RAG:'Raggi & Nippli',VAL:'Valvole',MOZ:'Mozzi',CUF:'Cuffie',MAN:'Manubrio',ATT:'Attacco/Stem',REG:'Reggisella',SEL:'Sella',FAC:'Fascette'},IDR:{MAN:'Manichetta',FIT:'Raccordi',OLI:'Olio idraulico',CIP:'Cilindretto',RES:'Serbatoio'},ELT:{BAT:'Batteria',CAR:'Caricatore',CAB:'Cavo/Connettore',SEN:'Sensore',COM:'Computer',MOD:'Modulo/Junction'},CON:{LUB:'Lubrificante',GRS:'Grasso',DET:'Detergente',SIG:'Sigillante',NAS:'Nastro',ANT:'Anti-grippante'}};
+const ZONA_CLS={A:'zA',B:'zB',C:'zC',D:'zD',E:'zE',F:'zF',G:'zG',H:'zH',I:'zI'};
+const STATI_GARA={confermato:{label:'Confermata',emoji:'🟢',cls:'stato-confermato',card:'conf'},provvisorio:{label:'Provvisoria',emoji:'🟡',cls:'stato-provvisorio',card:'prov'},annullato:{label:'Annullata',emoji:'🔴',cls:'stato-annullato',card:'annul'},tba:{label:'TBA',emoji:'⚫',cls:'stato-tba',card:'tba'}};
+const TIPO_CLS={UCI:'tipo-UCI',INT:'tipo-INT',NAZ:'tipo-NAZ',GRC:'tipo-GRC','INT/GRC':'tipo-INT','INT/MASTER':'tipo-INT',TBA:'tipo-TBA'};
+const MESI=['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const MESI_S=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+function getArea(pos){if(!pos)return null;const l=pos.split('-')[0];return AREE[l]?{letter:l,...AREE[l]}:null;}
+function zonaBadge(pos){const a=getArea(pos);if(!a)return'';return`<span class="zona-pill ${ZONA_CLS[a.letter]||''}">${a.emoji} ${a.nome}</span>`;}
+function codBadge(cod){if(!cod)return'';return`<span class="cod-badge">${esc(cod)}</span>`;}
+function statoBadge(s){const st=STATI_GARA[s]||STATI_GARA.provvisorio;return`<span class="b ${st.cls}">${st.emoji} ${st.label}</span>`;}
+function genCodice(area,cat,sub){if(!area||!cat||!sub)return'';const pfx=`${area}-${cat}-${sub}`;const nums=D.catalogo.filter(c=>c.codice&&c.codice.startsWith(pfx+'-')).map(c=>parseInt(c.codice.split('-').pop())||0);return`${pfx}-${String(nums.length?Math.max(...nums)+1:1).padStart(3,'0')}`;}
+
+const SK='cx_v5'; let D={}, qmSelId='', qmTipo='uscita', selAtl='', selBici='', selGara='';
+const DEF={
+  stagione:'2026-2027', budgetTot:5000,
+  budgetCat:{'Trasmissione':1200,'Freni':600,'Cerchi & Ruote':1500,'Consumabili':800,'Sterzo & Sella':400,'Varie':500},
+  catalogo:[
+    {id:'C001',codice:'A-MEC-CAT-001',codArea:'A',codCat:'MEC',codSubcat:'CAT',desc:'Catena SRAM XX1 Eagle 12v',um:'pz',costo:42,giac:8,smin:3,stato:'attivo',stagione:'2026-2027',fornitore:'Probike SRL',leadtime:5,posizione:'A-1',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:42}]},
+    {id:'C002',codice:'A-MEC-CAS-001',codArea:'A',codCat:'MEC',codSubcat:'CAS',desc:'Cassetta SRAM XG-1299 10-50T',um:'pz',costo:189,giac:3,smin:2,stato:'attivo',stagione:'2026-2027',fornitore:'Probike SRL',leadtime:7,posizione:'A-2',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:189}]},
+    {id:'C003',codice:'B-MEC-PAD-001',codArea:'B',codCat:'MEC',codSubcat:'PAD',desc:'Pastiglie freno Shimano XT (coppia)',um:'coppia',costo:18,giac:12,smin:6,stato:'attivo',stagione:'2026-2027',fornitore:'MTB Parts Italy',leadtime:3,posizione:'B-1',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:18}]},
+    {id:'C004',codice:'C-MEC-TUB-001',codArea:'C',codCat:'MEC',codSubcat:'TUB',desc:'Tubolare Vittoria Terreno Mix 33mm',um:'pz',costo:65,giac:20,smin:8,stato:'attivo',stagione:'2026-2027',fornitore:'Vittoria Direct',leadtime:10,posizione:'C-1',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:65}]},
+    {id:'C005',codice:'H-CON-GRS-001',codArea:'H',codCat:'CON',codSubcat:'GRS',desc:'Grasso Finish Line Teflon 500ml',um:'flacone',costo:12,giac:4,smin:2,stato:'attivo',stagione:'2026-2027',fornitore:'Bikeshop Online',leadtime:4,posizione:'H-2',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:12}]},
+    {id:'C006',codice:'H-CON-LUB-001',codArea:'H',codCat:'CON',codSubcat:'LUB',desc:'Olio catena Squirt Lube 120ml',um:'flacone',costo:14,giac:6,smin:3,stato:'attivo',stagione:'2026-2027',fornitore:'Bikeshop Online',leadtime:4,posizione:'H-1',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:14}]},
+    {id:'C007',codice:'B-MEC-CAV-001',codArea:'B',codCat:'MEC',codSubcat:'CAV',desc:'Cavo freno inox 2m',um:'pz',costo:5,giac:2,smin:4,stato:'attivo',stagione:'2026-2027',fornitore:'MTB Parts Italy',leadtime:3,posizione:'B-3',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:5}]},
+  ],
+  movimenti:[
+    {id:'MV01',data:'2026-09-01',tipo:'ingresso',cid:'C001',qty:10,caus:'Acquisto stagionale',mec:'',aid:''},
+    {id:'MV02',data:'2026-09-01',tipo:'ingresso',cid:'C004',qty:30,caus:'Acquisto stagionale',mec:'',aid:''},
+    {id:'MV03',data:'2026-09-01',tipo:'ingresso',cid:'C003',qty:20,caus:'Acquisto stagionale',mec:'',aid:''},
+  ],
+  atleti:[
+    {id:'A001',nome:'Arbi',cogn:'Gashi',num:1,cat:'',annoNascita:'',licenza:''},
+    {id:'A002',nome:'Luca',cogn:'Ferro',num:2,cat:'',annoNascita:'',licenza:''},
+    {id:'A003',nome:'Aurora',cogn:'Cerame',num:3,cat:'',annoNascita:'',licenza:''},
+    {id:'A004',nome:'Emma',cogn:'Bembo',num:4,cat:'',annoNascita:'',licenza:''},
+    {id:'A005',nome:'Santiago',cogn:'Bembo',num:5,cat:'',annoNascita:'',licenza:''},
+    {id:'A006',nome:'Giovanni',cogn:'Bosio',num:6,cat:'',annoNascita:'',licenza:''},
+    {id:'A007',nome:'Elia',cogn:'Carroli',num:7,cat:'',annoNascita:'',licenza:''},
+  ],
+  bici:[
+    {id:'B001',aid:'A001',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B002',aid:'A001',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B003',aid:'A002',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B004',aid:'A002',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B005',aid:'A003',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B006',aid:'A003',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B007',aid:'A004',num:1,marca:'Dynetech',mod:'CX',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Rival 1×12 velocità',ruoteAll:'Deda alluminio',ruoteGara:'',note:''},
+    {id:'B008',aid:'A004',num:2,marca:'Dynetech',mod:'CX',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Rival 1×12 velocità',ruoteAll:'Deda alluminio',ruoteGara:'',note:''},
+    {id:'B009',aid:'A005',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B010',aid:'A005',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B011',aid:'A006',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B012',aid:'A006',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B013',aid:'A007',num:1,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+    {id:'B014',aid:'A007',num:2,marca:'Pinarello',mod:'F9 Crossista',anno:2024,sn:'',taglia:'',km:0,gruppo:'Sram Force 1×12 velocità',ruoteAll:'Most carbonio tubeless',ruoteGara:'',note:''},
+  ],
+  manutenzioni:[],
+  gare:[
+    {id:'G001',data:'2026-09-27',nome:'ILLNAU',luogo:'ILLNAU',nazione:'SVIZZERA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G002',data:'2026-09-27',nome:'CORRIDONIA',luogo:'CORRIDONIA',nazione:'ITALIA',tipo:'GRC',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G003',data:'2026-10-04',nome:'TARVISIO',luogo:'TARVISIO',nazione:'ITALIA',tipo:'INT/GRC',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G004',data:'2026-10-11',nome:'OSOPPO',luogo:'OSOPPO',nazione:'ITALIA',tipo:'INT/GRC',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G005',data:'2026-10-18',nome:'ZONCOLAN',luogo:'ZONCOLAN',nazione:'ITALIA',tipo:'INT/GRC',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G006',data:'2026-10-24',nome:'SALVIROLA',luogo:'SALVIROLA',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G007',data:'2026-10-25',nome:'SALVIROLA',luogo:'SALVIROLA',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G008',data:'2026-10-30',nome:'BREMBA',luogo:'BREMBA',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G009',data:'2026-11-01',nome:'MUGELLO',luogo:'MUGELLO',nazione:'ITALIA',tipo:'INT/MASTER',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G010',data:'2026-11-07',nome:'CAMPIONATO EUROPEO',luogo:'ZEDDAM',nazione:'OLANDA',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G011',data:'2026-11-08',nome:'CAMPIONATO EUROPEO',luogo:'ZEDDAM',nazione:'OLANDA',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G012',data:'2026-11-07',nome:'GARE NAZIONALI',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G013',data:'2026-11-08',nome:'GARE NAZIONALI',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G014',data:'2026-11-15',nome:'S.FRANCESCO',luogo:'S.FRANCESCO',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G015',data:'2026-11-22',nome:'CAMPIONATO EUROPEO GIOVANILE',luogo:'VATRA DORNEI',nazione:'ROMANIA',tipo:'INT',stato:'confermato',partecipanti:[],note:''},
+    {id:'G016',data:'2026-11-28',nome:'TBA',luogo:'TBA',nazione:'TBA',tipo:'TBA',stato:'tba',partecipanti:[],note:''},
+    {id:'G017',data:'2026-11-29',nome:'TBA',luogo:'TBA',nazione:'TBA',tipo:'TBA',stato:'tba',partecipanti:[],note:''},
+    {id:'G018',data:'2026-11-29',nome:'COPPA DEL MONDO',luogo:'TABOR',nazione:'REP.CECA',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G019',data:'2026-12-06',nome:"S.PIETRO IN GU'",luogo:"S.PIETRO IN GU'",nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G020',data:'2026-12-08',nome:"FAÈ",luogo:"FAÈ",nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G021',data:'2026-12-13',nome:'BARI',luogo:'BARI',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G022',data:'2026-12-13',nome:'NAZIONALE',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G023',data:'2026-12-20',nome:'COPPA DEL MONDO',luogo:'KOKSIJDE',nazione:'BELGIO',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G024',data:'2026-12-20',nome:'S.COLOMBANO',luogo:'S.COLOMBANO',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''},
+    {id:'G025',data:'2026-12-21',nome:'Stage Belgio',luogo:'BELGIO',nazione:'BELGIO',tipo:'TBA',stato:'tba',partecipanti:[],note:'Blocco Belgio'},
+    {id:'G026',data:'2026-12-22',nome:'Stage Belgio',luogo:'BELGIO',nazione:'BELGIO',tipo:'TBA',stato:'tba',partecipanti:[],note:'Blocco Belgio'},
+    {id:'G027',data:'2026-12-23',nome:'Stage Belgio',luogo:'BELGIO',nazione:'BELGIO',tipo:'TBA',stato:'tba',partecipanti:[],note:'Blocco Belgio'},
+    {id:'G028',data:'2026-12-24',nome:'Stage Belgio / NAZ Italia',luogo:'TBA',nazione:'TBA',tipo:'TBA',stato:'tba',partecipanti:[],note:'Blocco Belgio o gara nazionale'},
+    {id:'G029',data:'2026-12-26',nome:'Stage Belgio / NAZ Italia',luogo:'TBA',nazione:'TBA',tipo:'TBA',stato:'tba',partecipanti:[],note:''},
+    {id:'G030',data:'2026-12-27',nome:'Stage Belgio / NAZ Italia',luogo:'TBA',nazione:'TBA',tipo:'TBA',stato:'tba',partecipanti:[],note:''},
+    {id:'G031',data:'2026-12-29',nome:'COPPA DEL MONDO',luogo:'BESANÇON',nazione:'FRANCIA',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G032',data:'2026-12-29',nome:'TBA',luogo:'TBA',nazione:'BELGIO',tipo:'TBA',stato:'tba',partecipanti:[],note:''},
+    {id:'G033',data:'2026-12-30',nome:'TBA',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G034',data:'2026-12-31',nome:'TBA',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G035',data:'2027-01-03',nome:'CAMP. ITALIANO GIOVANILE',luogo:'CATTOLICA / MUGELLO',nazione:'ITALIA',tipo:'NAZ',stato:'confermato',partecipanti:[],note:''},
+    {id:'G036',data:'2027-01-17',nome:'COPPA DEL MONDO',luogo:'BENIDORM',nazione:'SPAGNA',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G037',data:'2027-01-17',nome:'TBA',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G038',data:'2027-01-24',nome:'COPPA DEL MONDO',luogo:'HOOGERHEIDE',nazione:'OLANDA',tipo:'UCI',stato:'confermato',partecipanti:[],note:''},
+    {id:'G039',data:'2027-01-24',nome:'TBA',luogo:'TBA',nazione:'ITALIA',tipo:'NAZ',stato:'tba',partecipanti:[],note:''},
+    {id:'G040',data:'2027-01-29',nome:'CAMPIONATO MONDIALE',luogo:'OSTENDA',nazione:'BELGIO',tipo:'UCI',stato:'confermato',partecipanti:[],note:'Giorno 1'},
+    {id:'G041',data:'2027-01-30',nome:'CAMPIONATO MONDIALE',luogo:'OSTENDA',nazione:'BELGIO',tipo:'UCI',stato:'confermato',partecipanti:[],note:'Giorno 2'},
+    {id:'G042',data:'2027-01-31',nome:'CAMPIONATO MONDIALE',luogo:'OSTENDA',nazione:'BELGIO',tipo:'UCI',stato:'confermato',partecipanti:[],note:'Giorno 3'},
+  ],
+};
+
+function load(){const s=localStorage.getItem(SK);if(s){try{D=JSON.parse(s);}catch(e){D=JSON.parse(JSON.stringify(DEF));}}else{D=JSON.parse(JSON.stringify(DEF));save();}}
+function save(){localStorage.setItem(SK,JSON.stringify(D));saveToCloud();}
+function gid(p){return p+Date.now().toString(36).toUpperCase().slice(-6);}
+function fd(d){if(!d)return'—';const[y,m,g]=d.split('-');return`${g}/${m}/${y}`;}
+function fdShort(d){if(!d)return'—';const[y,m,g]=d.split('-');return`${g} ${MESI_S[+m]}`;}
+function fe(v,dec=2){return'€ '+(+v||0).toFixed(dec);}
+function tod(){return new Date().toISOString().split('T')[0];}
+function ath(id){return D.atleti.find(x=>x.id===id);}
+function bik(id){return D.bici.find(x=>x.id===id);}
+function comp(id){return D.catalogo.find(x=>x.id===id);}
+function gara(id){return D.gare.find(x=>x.id===id);}
+function fn(a){return a?a.nome+' '+a.cogn:'—';}
+function bn(b){return b?b.marca+' '+b.mod+' (Bici '+b.num+')':'—';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function dDiff(d1,d2){return Math.floor((new Date(d1)-new Date(d2))/86400000);}
+function costoMnt(m){return(m.ci||[]).reduce((a,ci)=>{const c=comp(ci.cid);return a+(c?c.costo*ci.qty:0);},0);}
+function zonaUsedInMnt(ci){const z={};(ci||[]).forEach(x=>{const c=comp(x.cid);if(!c)return;const a=getArea(c.posizione);if(a)z[a.letter]=a;});return Object.values(z);}
+function catBadge(cat){if(!cat)return'<span class="b bgy">— da definire</span>';const col=cat.includes('Elite')?'br':cat.includes('Under')||cat.includes('23')?'bb':cat.includes('Junior')?'bo':cat.includes('Allievi')||cat.includes('Allieve')?'bpu':cat.includes('Esord')?'btl':'bgy';return`<span class="b ${col}">${esc(cat)}</span>`;}
+
+let page='dash',tabs={};
+function nav(p){page=p;if(!tabs[p])tabs[p]=0;document.querySelectorAll('.sb-it').forEach(el=>el.classList.toggle('act',el.getAttribute('onclick')==="nav('"+p+"')"));document.querySelectorAll('.bn-item').forEach(el=>el.classList.toggle('act',el.id==='bn-'+p));render();}
+function setTab(p,i){tabs[p]=i;render();}
+function render(){const info={dash:['Dashboard','Riepilogo stagione'],mag:['Magazzino','Catalogo · Movimenti · Reintegro · Statistiche'],atl:['Atleti & Biciclette','Anagrafica · Manutenzioni · Analisi'],gare:['Gare & Calendario','Stagione 2026–2027 · 42 eventi'],kpi:['KPI & Usura','Costi · Zone bici · Indici usura']};const[t,s]=info[page]||['',''];document.getElementById('pg-title').textContent=t;document.getElementById('pg-sub').textContent=s;const fns={dash:rDash,mag:rMag,atl:rAtl,gare:rGare,kpi:rKpi};document.getElementById('content').innerHTML=(fns[page]||rDash)();bindAll();}
+function bindAll(){document.querySelectorAll('.mbg').forEach(el=>{el.onclick=e=>{if(e.target===el)el.classList.remove('open');};});}
+
+function spesaTot(){return D.movimenti.filter(m=>m.tipo==='ingresso').reduce((a,m)=>{const cp=comp(m.cid);return a+(cp?cp.costo*m.qty:0);},0);}
+function valStock(){return D.catalogo.filter(c=>c.stato!=='archiviato').reduce((a,c)=>a+(c.costo||0)*(c.giac||0),0);}
+function consGio(cid){const now=new Date(),s=new Date(now-30*86400000);return D.movimenti.filter(m=>m.tipo==='uscita'&&m.cid===cid&&new Date(m.data)>=s).reduce((a,m)=>a+m.qty,0)/30;}
+function mntsInScad(){const now=new Date(),lim=new Date();lim.setDate(lim.getDate()+14);return D.manutenzioni.filter(m=>m.prox&&new Date(m.prox)>=now&&new Date(m.prox)<=lim);}
+function trovaScadute(){const today=new Date();return D.manutenzioni.filter(m=>{if(!m.prox||new Date(m.prox)>=today)return false;return!D.manutenzioni.some(m2=>m2.bid===m.bid&&m2.id!==m.id&&new Date(m2.data)>=new Date(m.prox));}).map(m=>({...m,ggR:Math.floor((today-new Date(m.prox))/86400000)}));}
+function trovaAnomalie(){const out=[];D.manutenzioni.filter(m=>m.tipo==='correttiva').forEach(m=>{const mD=new Date(m.data);const prev=D.manutenzioni.find(m2=>m2.bid===m.bid&&m2.tipo==='preventiva'&&m2.id!==m.id&&new Date(m2.data)<=mD&&(mD-new Date(m2.data))<=30*86400000);if(prev)out.push({c:m,p:prev,gg:Math.floor((mD-new Date(prev.data))/86400000)});});return out;}
+function kpiAtleta(aid){
+  const bs=D.bici.filter(b=>b.aid===aid),ms=D.manutenzioni.filter(m=>bs.some(b=>b.id===m.bid));
+  const km=bs.reduce((a,b)=>a+(b.km||0),0);
+  let tot=0,zona={},tipo={preventiva:0,correttiva:0,'pre-gara':0,'post-gara':0};
+  ms.forEach(m=>{(m.ci||[]).forEach(ci=>{const c=comp(ci.cid);if(!c)return;const v=c.costo*ci.qty;tot+=v;tipo[m.tipo]=(tipo[m.tipo]||0)+v;const a=getArea(c.posizione);if(a){if(!zona[a.letter])zona[a.letter]={...a,v:0};zona[a.letter].v+=v;}});});
+  return{tot,cpKm:km>0?tot/km:null,km,zona,zA:Object.values(zona).sort((a,b)=>b.v-a.v),tipo,ms,bs,nP:ms.filter(m=>m.tipo==='preventiva').length,nC:ms.filter(m=>m.tipo==='correttiva').length};
+}
+function prossimeGare(n){const today=tod();return D.gare.filter(g=>g.data>=today&&g.stato!=='annullato').sort((a,b)=>a.data>b.data?1:-1).slice(0,n||3);}
+function atletiSenzaCat(){return D.atleti.filter(a=>!a.cat);}
+
+function rDash(){
+  const pg=prossimeGare(3),sc=trovaScadute(),ac=atletiSenzaCat();
+  const sott=D.catalogo.filter(c=>c.stato!=='archiviato'&&(c.giac||0)<=(c.smin||0));
+  const conf=D.gare.filter(g=>g.stato==='confermato').length;
+  const prov=D.gare.filter(g=>g.stato==='provvisorio').length;
+  return`<div class="dash-grid">
+<div class="card">
+  <div class="card-title">📊 Stagione ${esc(D.stagione)}</div>
+  <div class="stat-row"><span>Gare totali</span><span class="stat-val">${D.gare.length}</span></div>
+  <div class="stat-row"><span>Confermate</span><span class="stat-val" style="color:var(--green)">${conf}</span></div>
+  <div class="stat-row"><span>Provvisorie</span><span class="stat-val" style="color:var(--yellow)">${prov}</span></div>
+  <div class="stat-row"><span>Atleti</span><span class="stat-val">${D.atleti.length}</span></div>
+  <div class="stat-row"><span>Biciclette</span><span class="stat-val">${D.bici.length}</span></div>
+</div>
+<div class="card">
+  <div class="card-title">💰 Budget & Magazzino</div>
+  <div class="stat-row"><span>Budget stagionale</span><span class="stat-val">${fe(D.budgetTot,0)}</span></div>
+  <div class="stat-row"><span>Spesa totale</span><span class="stat-val">${fe(spesaTot(),0)}</span></div>
+  <div class="stat-row"><span>Valore stock</span><span class="stat-val">${fe(valStock(),0)}</span></div>
+  <div class="stat-row"><span>Articoli catalogo</span><span class="stat-val">${D.catalogo.filter(c=>c.stato!=='archiviato').length}</span></div>
+  ${sott.length?`<div class="alert-box">⚠️ ${sott.length} articol${sott.length>1?'i':'o'} sotto scorta minima</div>`:''}
+</div>
+<div class="card">
+  <div class="card-title">🏁 Prossime Gare</div>
+  ${pg.length?pg.map(g=>`<div class="stat-row"><span>${fdShort(g.data)} — ${esc(g.nome)}</span><span>${statoBadge(g.stato)}</span></div>`).join(''):'<p class="empty">Nessuna gara imminente</p>'}
+</div>
+<div class="card">
+  <div class="card-title">🔔 Avvisi</div>
+  ${sc.length?sc.slice(0,3).map(m=>{const b=bik(m.bid),a=b?ath(b.aid):null;return`<div class="alert-box">⚠️ Mnt. scaduta ${m.ggR}gg fa — ${a?fn(a):'?'} ${b?'Bici '+b.num:''}</div>`;}).join(''):''}
+  ${ac.length?`<div class="alert-box">ℹ️ ${ac.length} atleta/i senza categoria definita</div>`:''}
+  ${!sc.length&&!ac.length?'<p class="empty">Nessun avviso</p>':''}
+</div>
+</div>`;
+}
+
+function rMag(){
+  const t=tabs.mag||0;
+  return`<div class="tabs"><button class="tab${t===0?' act':''}" onclick="setTab('mag',0)">📋 Catalogo</button><button class="tab${t===1?' act':''}" onclick="setTab('mag',1)">📦 Movimenti</button><button class="tab${t===2?' act':''}" onclick="setTab('mag',2)">🔄 Reintegro</button><button class="tab${t===3?' act':''}" onclick="setTab('mag',3)">📊 Statistiche</button></div>
+<div class="tab-content">${[rCat,rMov,rRei,rStat][t]()}</div>`;
+}
+
+function rInserimento(){
+  const cats=Object.keys(SUBCATS);
+  const aree=Object.entries(AREE).map(([k,v])=>`<option value="${k}">${v.emoji} ${v.nome}</option>`).join('');
+  const catOpts=cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  return`<div class="form-section">
+<h3>➕ Nuovo Componente</h3>
+<div class="form-grid">
+  <label>Area<select id="ins-area" onchange="updInsSubcat()">${aree}</select></label>
+  <label>Categoria<select id="ins-cat" onchange="updInsSubcat()">${catOpts}</select></label>
+  <label>Sottocategoria<select id="ins-sub" onchange="updInsCod()"><option value="">—</option></select></label>
+  <label>Codice (auto)<input id="ins-cod" readonly style="background:var(--bg2)"></label>
+  <label>Descrizione<input id="ins-desc" placeholder="Descrizione componente"></label>
+  <label>U.M.<input id="ins-um" placeholder="pz / flacone / coppia"></label>
+  <label>Costo unit. (€)<input id="ins-costo" type="number" min="0" step="0.01" value="0"></label>
+  <label>Giacenza<input id="ins-giac" type="number" min="0" value="0"></label>
+  <label>Scorta min.<input id="ins-smin" type="number" min="0" value="0"></label>
+  <label>Posizione<select id="ins-pos">${Object.entries(SLOTS).map(([k,v])=>`<option value="${k}">${k} — ${v}</option>`).join('')}</select></label>
+  <label>Fornitore<input id="ins-forn" placeholder="Nome fornitore"></label>
+  <label>Lead time (gg)<input id="ins-lt" type="number" min="0" value="7"></label>
+  <label style="grid-column:1/-1">Note<textarea id="ins-note" rows="2"></textarea></label>
+</div>
+<div style="margin-top:12px;display:flex;gap:8px;">
+  <button class="btn btn-p" onclick="saveNewComp()">💾 Salva</button>
+  <button class="btn" onclick="setTab('mag',0)">✕ Annulla</button>
+</div>
+</div>`;
+}
+
+function updInsSubcat(){
+  const a=document.getElementById('ins-area')?.value,c=document.getElementById('ins-cat')?.value;
+  const sub=SUBCATS[c]||{};
+  document.getElementById('ins-sub').innerHTML='<option value="">—</option>'+Object.entries(sub).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  updInsCod();
+}
+function updInsCod(){
+  const a=document.getElementById('ins-area')?.value,c=document.getElementById('ins-cat')?.value,s=document.getElementById('ins-sub')?.value;
+  const cod=genCodice(a,c,s);
+  if(document.getElementById('ins-cod'))document.getElementById('ins-cod').value=cod;
+}
+function saveNewComp(){
+  const a=document.getElementById('ins-area')?.value,c=document.getElementById('ins-cat')?.value,s=document.getElementById('ins-sub')?.value;
+  const desc=document.getElementById('ins-desc')?.value.trim();
+  if(!desc){alert('Inserisci una descrizione');return;}
+  const cod=genCodice(a,c,s);
+  const pos=document.getElementById('ins-pos')?.value;
+  const nc={id:gid('C'),codice:cod,codArea:a,codCat:c,codSubcat:s,desc,um:document.getElementById('ins-um')?.value||'pz',costo:+document.getElementById('ins-costo')?.value||0,giac:+document.getElementById('ins-giac')?.value||0,smin:+document.getElementById('ins-smin')?.value||0,stato:'attivo',stagione:D.stagione,fornitore:document.getElementById('ins-forn')?.value||'',leadtime:+document.getElementById('ins-lt')?.value||7,posizione:pos,rif:'',noteComp:document.getElementById('ins-note')?.value||'',prezzoStorico:[{data:tod(),v:+document.getElementById('ins-costo')?.value||0}]};
+  D.catalogo.push(nc);save();setTab('mag',0);
+}
+
+function showQMode(cid){qmSelId=cid;qmTipo='uscita';document.getElementById('qm-tipo-usc').classList.add('act');document.getElementById('qm-tipo-ing').classList.remove('act');const c=comp(cid);document.getElementById('qm-title').textContent=c?c.desc:'Movimento rapido';document.getElementById('qm-qty').value=1;document.getElementById('qm-caus').value='';document.getElementById('qm-atl-f').style.display='block';document.getElementById('qm-custom-caus').style.display='none';document.getElementById('modal-qm').classList.add('open');}
+function qmSearch(v){const q=v.toLowerCase();document.querySelectorAll('.qm-row').forEach(r=>{r.style.display=r.dataset.desc?.toLowerCase().includes(q)?'':'none';});}
+function qmSelect(cid){document.querySelectorAll('.qm-row').forEach(r=>r.classList.toggle('sel',r.dataset.cid===cid));qmSelId=cid;const c=comp(cid);if(c)document.getElementById('qm-title').textContent=c.desc;}
+function qmClear(){qmSelId='';document.querySelectorAll('.qm-row').forEach(r=>r.classList.remove('sel'));}
+function setQmTipo(t){qmTipo=t;document.getElementById('qm-tipo-usc').classList.toggle('act',t==='uscita');document.getElementById('qm-tipo-ing').classList.toggle('act',t==='ingresso');document.getElementById('qm-atl-f').style.display=t==='uscita'?'block':'none';}
+function toggleQmCustom(v){document.getElementById('qm-custom-caus').style.display=v==='custom'?'block':'none';}
+function saveQmMov(){
+  if(!qmSelId){alert('Seleziona un componente');return;}
+  const qty=+document.getElementById('qm-qty')?.value||1;
+  const causEl=document.getElementById('qm-caus');
+  let caus=causEl?.value==='custom'?document.getElementById('qm-custom-text')?.value||'':causEl?.value||'';
+  const aid=qmTipo==='uscita'?document.getElementById('qm-atl')?.value||'':'';
+  const c=comp(qmSelId);if(!c)return;
+  if(qmTipo==='uscita'){if(c.giac<qty){alert('Giacenza insufficiente');return;}c.giac-=qty;}else{c.giac+=qty;}
+  D.movimenti.push({id:gid('MV'),data:tod(),tipo:qmTipo,cid:qmSelId,qty,caus,mec:'',aid});
+  save();closeM('modal-qm');render();
+}
+function openMComp(cid){
+  const c=comp(cid)||{id:gid('C'),codArea:'A',codCat:'MEC',codSubcat:'CAT',desc:'',um:'pz',costo:0,giac:0,smin:0,stato:'attivo',stagione:D.stagione,fornitore:'',leadtime:7,posizione:'A-1',rif:'',noteComp:''};
+  const isNew=!cid;
+  document.getElementById('mc-id').value=c.id;
+  document.getElementById('mc-desc').value=c.desc;
+  document.getElementById('mc-um').value=c.um;
+  document.getElementById('mc-costo').value=c.costo;
+  document.getElementById('mc-giac').value=c.giac;
+  document.getElementById('mc-smin').value=c.smin;
+  document.getElementById('mc-forn').value=c.fornitore||'';
+  document.getElementById('mc-lt').value=c.leadtime||7;
+  document.getElementById('mc-pos').value=c.posizione||'A-1';
+  document.getElementById('mc-stato').value=c.stato||'attivo';
+  document.getElementById('mc-note').value=c.noteComp||'';
+  document.getElementById('mc-title').textContent=isNew?'Nuovo Componente':'Modifica Componente';
+  document.getElementById('mc-del').style.display=isNew?'none':'inline-block';
+  document.getElementById('modal-comp').classList.add('open');
+}
+
+function rCat(){
+  const att=D.catalogo.filter(c=>c.stato!=='archiviato');
+  const sott=att.filter(c=>(c.giac||0)<=(c.smin||0));
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <button class="btn btn-p" onclick="setTab('mag',4)">➕ Nuovo</button>
+  <button class="btn btn-s" onclick="showQMode(null);document.getElementById('modal-qm').classList.add('open')">⚡ Mov. Rapido</button>
+  <input class="search-in" placeholder="🔍 Cerca..." oninput="filtraCat(this.value)">
+</div>
+${sott.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ Sotto scorta: ${sott.map(c=>esc(c.desc)).join(', ')}</div>`:''}
+<div class="table-wrap"><table class="tbl" id="tbl-cat">
+<thead><tr><th>Codice</th><th>Descrizione</th><th>U.M.</th><th>Costo</th><th>Giacenza</th><th>S.Min</th><th>Posizione</th><th>Stato</th><th></th></tr></thead>
+<tbody>${att.map(c=>`<tr class="${(c.giac||0)<=(c.smin||0)?'row-warn':''}">
+  <td>${codBadge(c.codice)}</td>
+  <td>${esc(c.desc)}</td>
+  <td>${esc(c.um)}</td>
+  <td>${fe(c.costo)}</td>
+  <td><strong>${c.giac||0}</strong></td>
+  <td>${c.smin||0}</td>
+  <td>${zonaBadge(c.posizione)}</td>
+  <td><span class="b ${c.stato==='attivo'?'bg':'bgy'}">${esc(c.stato)}</span></td>
+  <td><button class="btn-ico" onclick="openMComp('${c.id}')">✏️</button><button class="btn-ico" onclick="showQMode('${c.id}')">⚡</button></td>
+</tr>`).join('')}
+</tbody></table></div>`;
+}
+function filtraCat(v){const q=v.toLowerCase();document.querySelectorAll('#tbl-cat tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':' none';});}
+function righecat(){}
+
+function rMov(){
+  const mvs=[...D.movimenti].sort((a,b)=>b.data>a.data?1:-1).slice(0,50);
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <button class="btn btn-p" onclick="openM('modal-mov')">➕ Movimento</button>
+</div>
+<div class="table-wrap"><table class="tbl">
+<thead><tr><th>Data</th><th>Tipo</th><th>Componente</th><th>Qty</th><th>Causale</th><th>Atleta</th></tr></thead>
+<tbody>${mvs.map(m=>{const c=comp(m.cid),a=ath(m.aid);return`<tr>
+  <td>${fd(m.data)}</td>
+  <td><span class="b ${m.tipo==='ingresso'?'bg':'br'}">${m.tipo==='ingresso'?'↓ Ingresso':'↑ Uscita'}</span></td>
+  <td>${c?esc(c.desc):'—'}</td>
+  <td>${m.qty}</td>
+  <td>${esc(m.caus||'—')}</td>
+  <td>${a?fn(a):'—'}</td>
+</tr>`;}).join('')}
+</tbody></table></div>`;
+}
+function righemov(){}
+
+function rRei(){
+  const sott=D.catalogo.filter(c=>c.stato!=='archiviato'&&(c.giac||0)<=(c.smin||0));
+  if(!sott.length)return'<p class="empty">✅ Nessun articolo da reintegrare</p>';
+  return`<h3 style="margin-bottom:12px;">🔄 Articoli da reintegrare (${sott.length})</h3>
+<div class="table-wrap"><table class="tbl">
+<thead><tr><th>Codice</th><th>Descrizione</th><th>Giacenza</th><th>Scorta Min</th><th>Da ordinare</th><th>Fornitore</th><th>Lead time</th></tr></thead>
+<tbody>${sott.map(c=>`<tr class="row-warn">
+  <td>${codBadge(c.codice)}</td>
+  <td>${esc(c.desc)}</td>
+  <td><strong>${c.giac||0}</strong></td>
+  <td>${c.smin||0}</td>
+  <td><strong>${Math.max(0,(c.smin||0)*2-(c.giac||0))}</strong></td>
+  <td>${esc(c.fornitore||'—')}</td>
+  <td>${c.leadtime||'—'} gg</td>
+</tr>`).join('')}
+</tbody></table></div>`;
+}
+
+function rStat(){
+  const byArea={};D.catalogo.filter(c=>c.stato!=='archiviato').forEach(c=>{const a=getArea(c.posizione);if(!a)return;if(!byArea[a.letter])byArea[a.letter]={...a,val:0,n:0};byArea[a.letter].val+=(c.costo||0)*(c.giac||0);byArea[a.letter].n++;});
+  const rows=Object.values(byArea).sort((a,b)=>b.val-a.val);
+  const totVal=rows.reduce((a,r)=>a+r.val,0);
+  return`<h3 style="margin-bottom:12px;">📊 Valore Stock per Area</h3>
+<div class="table-wrap"><table class="tbl">
+<thead><tr><th>Area</th><th>Articoli</th><th>Valore</th><th>% sul totale</th></tr></thead>
+<tbody>${rows.map(r=>`<tr>
+  <td>${zonaBadge(r.letter+'-1')}</td>
+  <td>${r.n}</td>
+  <td>${fe(r.val)}</td>
+  <td>${totVal>0?((r.val/totVal)*100).toFixed(1):'0'}%</td>
+</tr>`).join('')}
+</tbody></table></div>
+<p style="margin-top:8px;color:var(--txt2)">Totale stock: <strong>${fe(totVal)}</strong></p>`;
+}
+
+function rAtl(){
+  const t=tabs.atl||0;
+  const atlSel=selAtl?ath(selAtl):null;
+  const biciSel=selBici?bik(selBici):null;
+  const tabs2=`<div class="tabs"><button class="tab${t===0?' act':''}" onclick="setTab('atl',0)">👥 Atleti</button>${atlSel?`<button class="tab${t===1?' act':''}" onclick="setTab('atl',1)">🚴 Bici di ${fn(atlSel)}</button>`:''}${biciSel?`<button class="tab${t===2?' act':''}" onclick="setTab('atl',2)">🔧 Manutenzioni</button><button class="tab${t===3?' act':''}" onclick="setTab('atl',3)">📊 Analisi</button>`:''}`;
+  return`${tabs2}</div><div class="tab-content">${[rAtlTab,()=>rBiciTab(selAtl),()=>rMntTab(selBici),()=>rAnalisi(selBici)][t]?.()}</div>`;
+}
+
+function rAtlTab(){
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <button class="btn btn-p" onclick="initAtl()">➕ Atleta</button>
+</div>
+<div class="atl-grid">${D.atleti.map(a=>{
+  const bs=D.bici.filter(b=>b.aid===a.id);
+  const ms=D.manutenzioni.filter(m=>bs.some(b=>b.id===m.bid));
+  const sc=trovaScadute().filter(m=>bs.some(b=>b.id===m.bid));
+  return`<div class="atl-card ${sc.length?'warn':''}">
+  <div class="atl-card-top">
+    <div class="atl-num">#${a.num}</div>
+    <div>
+      <div class="atl-nome">${fn(a)}</div>
+      <div>${catBadge(a.cat)}</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:4px;">
+      <button class="btn-ico" onclick="initAtl('${a.id}')">✏️</button>
+    </div>
+  </div>
+  <div class="atl-stats">
+    <span>🚴 ${bs.length} bici</span>
+    <span>🔧 ${ms.length} mnt.</span>
+    ${sc.length?`<span style="color:var(--red)">⚠️ ${sc.length} scadute</span>`:''}
+    ${a.licenza?`<span>📋 ${esc(a.licenza)}</span>`:''}
+  </div>
+  <button class="btn btn-s" style="width:100%;margin-top:8px" onclick="goAtl('${a.id}')">🚴 Vedi Biciclette →</button>
+</div>`;
+}).join('')}</div>`;
+}
+
+function goAtl(aid){selAtl=aid;selBici='';tabs.atl=1;render();}
+function goBici(bid){selBici=bid;tabs.atl=2;render();}
+
+function rBiciTab(aid){
+  const a=ath(aid);if(!a)return'<p class="empty">Atleta non trovato</p>';
+  const bs=D.bici.filter(b=>b.aid===aid);
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <button class="btn btn-p" onclick="initBici('','${aid}')">➕ Bici</button>
+  <button class="btn" onclick="setTab('atl',0)">← Atleti</button>
+</div>
+<h3 style="margin-bottom:12px;">Biciclette di ${fn(a)}</h3>
+${bs.map(b=>{
+  const ms=D.manutenzioni.filter(m=>m.bid===b.id);
+  const sc=trovaScadute().filter(m=>m.bid===b.id);
+  const tot=ms.reduce((a,m)=>a+costoMnt(m),0);
+  return`<div class="card mb8 ${sc.length?'warn':''}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+    <div>
+      <strong>Bici ${b.num} — ${esc(b.marca)} ${esc(b.mod)}</strong><br>
+      <small style="color:var(--txt2)">${esc(b.gruppo||'—')}</small>
+    </div>
+    <div style="display:flex;gap:4px;">
+      <button class="btn-ico" onclick="initBici('${b.id}')">✏️</button>
+      <button class="btn btn-s" onclick="goBici('${b.id}')">🔧 Mnt.</button>
+    </div>
+  </div>
+  <div class="atl-stats" style="margin-top:8px;">
+    <span>📅 ${b.anno||'—'}</span>
+    <span>🛣️ ${b.km||0} km</span>
+    <span>🔧 ${ms.length} mnt.</span>
+    <span>💰 ${fe(tot,0)}</span>
+    ${sc.length?`<span style="color:var(--red)">⚠️ ${sc.length} scadute</span>`:''}
+  </div>
+  ${b.ruoteAll?`<div style="font-size:12px;color:var(--txt2);margin-top:4px;">Ruote all.: ${esc(b.ruoteAll)}</div>`:''}
+  ${b.note?`<div style="font-size:12px;color:var(--txt2);margin-top:2px;">${esc(b.note)}</div>`:''}
+</div>`;
+}).join('')}`;
+}
+
+function rMntTab(bid){
+  const b=bik(bid);if(!b)return'<p class="empty">Bici non trovata</p>';
+  const a=ath(b.aid);
+  const ms=[...D.manutenzioni.filter(m=>m.bid===bid)].sort((a,b)=>b.data>a.data?1:-1);
+  const scad=trovaScadute().filter(m=>m.bid===bid);
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <button class="btn btn-p" onclick="initMnt('','${bid}')">➕ Manutenzione</button>
+  <button class="btn" onclick="setTab('atl',1)">← Bici</button>
+</div>
+<h3 style="margin-bottom:8px;">${fn(a)} — ${bn(b)}</h3>
+${scad.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ ${scad.length} manutenzione/i scaduta/e</div>`:''}
+${ms.length?ms.map(m=>{
+  const cis=m.ci||[];
+  const tot=costoMnt(m);
+  const zone=zonaUsedInMnt(cis);
+  const isScad=scad.some(s=>s.id===m.id);
+  return`<div class="card mb8 ${isScad?'warn':''}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+    <div>
+      <strong>${esc(m.desc||'Manutenzione')}</strong>
+      <span class="b bgy" style="margin-left:6px;">${esc(m.tipo)}</span>
+    </div>
+    <button class="btn-ico" onclick="initMnt('${m.id}')">✏️</button>
+  </div>
+  <div class="atl-stats" style="margin-top:6px;">
+    <span>📅 ${fd(m.data)}</span>
+    <span>💰 ${fe(tot,0)}</span>
+    ${m.km?`<span>🛣️ ${m.km} km</span>`:''}
+    ${m.prox?`<span>⏭️ Prox: ${fd(m.prox)}</span>`:''}
+  </div>
+  <div style="margin-top:6px;">${zone.map(z=>`<span class="zona-pill ${ZONA_CLS[z.letter]||''}">${z.emoji} ${z.nome}</span>`).join(' ')}</div>
+  ${cis.length?`<div style="font-size:12px;color:var(--txt2);margin-top:4px;">${cis.map(ci=>{const c=comp(ci.cid);return c?`${esc(c.desc)} ×${ci.qty}`:''}).filter(Boolean).join(' · ')}</div>`:''}
+  ${m.note?`<div style="font-size:12px;color:var(--txt2);margin-top:2px;font-style:italic;">${esc(m.note)}</div>`:''}
+</div>`;
+}).join(''):'<p class="empty">Nessuna manutenzione registrata</p>'}`;
+}
+function righeM(){}
+function bMnt(){}
+
+function rAnalisi(bid){
+  const b=bik(bid);if(!b)return'<p class="empty">Bici non trovata</p>';
+  const a=ath(b.aid);
+  const kpi=kpiAtleta(b.aid);
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <button class="btn" onclick="setTab('atl',2)">← Manutenzioni</button>
+</div>
+<h3 style="margin-bottom:12px;">Analisi — ${fn(a)}</h3>
+<div class="dash-grid">
+<div class="card">
+  <div class="card-title">💰 Costi Totali</div>
+  <div class="stat-row"><span>Totale interventi</span><span class="stat-val">${fe(kpi.tot,0)}</span></div>
+  <div class="stat-row"><span>Km totali</span><span class="stat-val">${kpi.km} km</span></div>
+  ${kpi.cpKm!==null?`<div class="stat-row"><span>Costo/km</span><span class="stat-val">${fe(kpi.cpKm,2)}</span></div>`:''}
+  <div class="stat-row"><span>Preventive</span><span class="stat-val">${kpi.nP}</span></div>
+  <div class="stat-row"><span>Correttive</span><span class="stat-val">${kpi.nC}</span></div>
+</div>
+<div class="card">
+  <div class="card-title">📍 Zone più costose</div>
+  ${kpi.zA.slice(0,5).map(z=>`<div class="stat-row"><span>${z.emoji} ${z.nome}</span><span class="stat-val">${fe(z.v,0)}</span></div>`).join('')||'<p class="empty">Nessun dato</p>'}
+</div>
+</div>`;
+}
+
+function rGare(){
+  const t=tabs.gare||0;
+  const garaSel=selGara?gara(selGara):null;
+  const tabsHtml=`<div class="tabs"><button class="tab${t===0?' act':''}" onclick="setTab('gare',0)">📅 Calendario</button>${garaSel?`<button class="tab${t===1?' act':''}" onclick="setTab('gare',1)">🏁 ${esc(garaSel.nome)}</button>`:''}</div>`;
+  return`${tabsHtml}<div class="tab-content">${t===0?rCalendario():rDashGara(selGara)}</div>`;
+}
+
+function rCalendario(){
+  const oggi=tod();
+  const byMese={};
+  D.gare.forEach(g=>{
+    const[y,m]=g.data.split('-');
+    const k=`${y}-${m}`;
+    if(!byMese[k])byMese[k]=[];
+    byMese[k].push(g);
+  });
+  const mesiOrd=Object.keys(byMese).sort();
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <button class="btn btn-p" onclick="initGara()">➕ Gara</button>
+</div>
+${mesiOrd.map(mk=>{
+  const[y,m]=mk.split('-');
+  const gs=byMese[mk].sort((a,b)=>a.data>b.data?1:-1);
+  return`<div style="margin-bottom:16px;">
+<h4 style="color:var(--acc);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--brd);">${MESI[+m]} ${y}</h4>
+<div class="table-wrap"><table class="tbl">
+<thead><tr><th>Data</th><th>Gara</th><th>Luogo</th><th>Nazione</th><th>Tipo</th><th>Stato</th><th>Part.</th><th></th></tr></thead>
+<tbody>${gs.map(g=>{
+  const past=g.data<oggi;
+  return`<tr class="${past?'past-row':''}">
+  <td>${fdShort(g.data)}</td>
+  <td><strong>${esc(g.nome)}</strong>${g.note?`<br><small style="color:var(--txt2)">${esc(g.note)}</small>`:''}</td>
+  <td>${esc(g.luogo)}</td>
+  <td>${esc(g.nazione)}</td>
+  <td><span class="b ${TIPO_CLS[g.tipo]||'bgy'}">${esc(g.tipo)}</span></td>
+  <td>${statoBadge(g.stato)}</td>
+  <td>${g.partecipanti?.length||0}/${D.atleti.length}</td>
+  <td><button class="btn-ico" onclick="initGara('${g.id}')">✏️</button><button class="btn-ico" onclick="goGara('${g.id}')">📋</button></td>
+</tr>`;
+}).join('')}
+</tbody></table></div></div>`;
+}).join('')}`;
+}
+
+function renderCalBody(){}
+function goGara(gid2){selGara=gid2;tabs.gare=1;render();}
+
+function rDashGara(gid2){
+  const g=gara(gid2);if(!g)return'<p class="empty">Gara non trovata</p>';
+  const parts=g.partecipanti||[];
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <button class="btn" onclick="setTab('gare',0)">← Calendario</button>
+  <button class="btn-ico" onclick="initGara('${g.id}')">✏️ Modifica</button>
+</div>
+<div class="card" style="margin-bottom:12px;">
+  <h3 style="margin-bottom:8px;">${esc(g.nome)}</h3>
+  <div class="stat-row"><span>📅 Data</span><span>${fd(g.data)}</span></div>
+  <div class="stat-row"><span>📍 Luogo</span><span>${esc(g.luogo)}, ${esc(g.nazione)}</span></div>
+  <div class="stat-row"><span>🏷️ Tipo</span><span><span class="b ${TIPO_CLS[g.tipo]||'bgy'}">${esc(g.tipo)}</span></span></div>
+  <div class="stat-row"><span>📊 Stato</span><span>${statoBadge(g.stato)}</span></div>
+  ${g.note?`<div style="margin-top:8px;font-size:13px;color:var(--txt2);">📝 ${esc(g.note)}</div>`:''}
+</div>
+<div class="card">
+  <div class="card-title" style="margin-bottom:12px;">👥 Partecipanti</div>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;">
+    <button class="btn btn-p" onclick="toggleAllPart('${g.id}',true)">✅ Tutti</button>
+    <button class="btn" onclick="toggleAllPart('${g.id}',false)">✕ Nessuno</button>
+  </div>
+  ${D.atleti.map(a=>{
+    const inPart=parts.some(p=>p.aid===a.id);
+    const pEntry=parts.find(p=>p.aid===a.id)||{};
+    const bs=D.bici.filter(b=>b.aid===a.id);
+    return`<div class="part-row ${inPart?'active':''}">
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+    <input type="checkbox" ${inPart?'checked':''} onchange="togglePart('${g.id}','${a.id}',this.checked)">
+    <strong>#${a.num} ${fn(a)}</strong> ${catBadge(a.cat)}
+  </label>
+  ${inPart&&bs.length?`<div style="margin-top:6px;padding-left:24px;">
+    <label style="font-size:12px;">Bici: <select onchange="setBiciPart('${g.id}','${a.id}',this.value)">
+      <option value="">—</option>
+      ${bs.map(b=>`<option value="${b.id}" ${pEntry.bid===b.id?'selected':''}>${b.marca} ${b.mod} (${b.num})</option>`).join('')}
+    </select></label>
+    <label style="font-size:12px;margin-left:8px;">Pos: <input type="number" min="1" max="99" style="width:50px" value="${pEntry.pos||''}" onchange="setPosGara('${g.id}','${a.id}',this.value)" placeholder="—"></label>
+    <label style="font-size:12px;margin-left:8px;">Note: <input type="text" style="width:120px" value="${esc(pEntry.note||'')}" onchange="setNotePartGara('${g.id}','${a.id}',this.value)" placeholder="—"></label>
+  </div>`:''}
+</div>`;
+  }).join('')}
+</div>`;
+}
+
+function toggleAllPart(gid2,on){
+  const g=gara(gid2);if(!g)return;
+  if(on){g.partecipanti=D.atleti.map(a=>({aid:a.id,bid:'',pos:'',note:''}));}
+  else{g.partecipanti=[];}
+  save();render();
+}
+function togglePart(gid2,aid,on){
+  const g=gara(gid2);if(!g)return;
+  if(!g.partecipanti)g.partecipanti=[];
+  if(on){if(!g.partecipanti.some(p=>p.aid===aid))g.partecipanti.push({aid,bid:'',pos:'',note:''});}
+  else{g.partecipanti=g.partecipanti.filter(p=>p.aid!==aid);}
+  save();render();
+}
+function setBiciPart(gid2,aid,bid){
+  const g=gara(gid2);if(!g)return;
+  const p=g.partecipanti?.find(p=>p.aid===aid);if(p)p.bid=bid;
+  save();
+}
+function setPosGara(gid2,aid,pos){
+  const g=gara(gid2);if(!g)return;
+  const p=g.partecipanti?.find(p=>p.aid===aid);if(p)p.pos=pos;
+  save();
+}
+function setNotePartGara(gid2,aid,note){
+  const g=gara(gid2);if(!g)return;
+  const p=g.partecipanti?.find(p=>p.aid===aid);if(p)p.note=note;
+  save();
+}
+function setStatoGara(gid2,stato){
+  const g=gara(gid2);if(!g)return;
+  g.stato=stato;save();render();
+}
+function saveNotaGara(gid2,nota){
+  const g=gara(gid2);if(!g)return;
+  g.note=nota;save();
+}
+
+function rKpi(){
+  const t=tabs.kpi||0;
+  return`<div class="tabs"><button class="tab${t===0?' act':''}" onclick="setTab('kpi',0)">💰 Per Atleta</button><button class="tab${t===1?' act':''}" onclick="setTab('kpi',1)">📍 Zone Bici</button><button class="tab${t===2?' act':''}" onclick="setTab('kpi',2)">⚙️ Usura</button></div>
+<div class="tab-content">${[rKpiAtl,rKpiZone,rKpiUsura][t]()}</div>`;
+}
+
+function rKpiAtl(){
+  return`<div class="table-wrap"><table class="tbl">
+<thead><tr><th>Atleta</th><th>Cat.</th><th>Bici</th><th>Km tot.</th><th>Costo tot.</th><th>€/km</th><th>N.Prev.</th><th>N.Corr.</th></tr></thead>
+<tbody>${D.atleti.map(a=>{
+  const kpi=kpiAtleta(a.id);
+  return`<tr>
+  <td><strong>${fn(a)}</strong></td>
+  <td>${catBadge(a.cat)}</td>
+  <td>${kpi.bs.length}</td>
+  <td>${kpi.km}</td>
+  <td>${fe(kpi.tot,0)}</td>
+  <td>${kpi.cpKm!==null?fe(kpi.cpKm,2):'—'}</td>
+  <td>${kpi.nP}</td>
+  <td>${kpi.nC}</td>
+</tr>`;
+}).join('')}
+</tbody></table></div>`;
+}
+
+function rKpiZone(){
+  const zona={};
+  D.manutenzioni.forEach(m=>{
+    (m.ci||[]).forEach(ci=>{
+      const c=comp(ci.cid);if(!c)return;
+      const a=getArea(c.posizione);if(!a)return;
+      if(!zona[a.letter])zona[a.letter]={...a,v:0,n:0};
+      zona[a.letter].v+=c.costo*ci.qty;
+      zona[a.letter].n+=ci.qty;
+    });
+  });
+  const rows=Object.values(zona).sort((a,b)=>b.v-a.v);
+  const totV=rows.reduce((a,r)=>a+r.v,0);
+  if(!rows.length)return'<p class="empty">Nessun dato di manutenzione disponibile</p>';
+  return`<div class="table-wrap"><table class="tbl">
+<thead><tr><th>Zona</th><th>Componenti usati</th><th>Costo totale</th><th>% totale</th></tr></thead>
+<tbody>${rows.map(r=>`<tr>
+  <td><span class="zona-pill ${ZONA_CLS[r.letter]||''}">${r.emoji} ${r.nome}</span></td>
+  <td>${r.n}</td>
+  <td>${fe(r.v,0)}</td>
+  <td>${totV>0?((r.v/totV)*100).toFixed(1):'0'}%</td>
+</tr>`).join('')}
+</tbody></table></div>`;
+}
+
+function rKpiUsura(){
+  const scad=trovaScadute();
+  const anom=trovaAnomalie();
+  const prox=mntsInScad();
+  return`<div class="dash-grid">
+<div class="card">
+  <div class="card-title">⚠️ Manutenzioni Scadute</div>
+  ${scad.length?scad.map(m=>{const b=bik(m.bid),a=b?ath(b.aid):null;return`<div class="stat-row"><span>${a?fn(a):'?'} — ${b?'Bici '+b.num:''}</span><span style="color:var(--red)">${m.ggR} gg fa</span></div>`;}).join(''):'<p class="empty">✅ Tutto in regola</p>'}
+</div>
+<div class="card">
+  <div class="card-title">🔔 In Scadenza (14 gg)</div>
+  ${prox.length?prox.map(m=>{const b=bik(m.bid),a=b?ath(b.aid):null;return`<div class="stat-row"><span>${a?fn(a):'?'} — ${b?'Bici '+b.num:''}</span><span>${fd(m.prox)}</span></div>`;}).join(''):'<p class="empty">Nessuna in scadenza</p>'}
+</div>
+<div class="card">
+  <div class="card-title">🔍 Anomalie Rilevate</div>
+  ${anom.length?anom.map(x=>{const b=bik(x.c.bid),a=b?ath(b.aid):null;return`<div class="stat-row"><span>${a?fn(a):'?'} — Correttiva ${x.gg}gg dopo preventiva</span><span style="color:var(--orange)">⚠️</span></div>`;}).join(''):'<p class="empty">Nessuna anomalia</p>'}
+</div>
+</div>`;
+}
+
+function openM(id){document.getElementById(id)?.classList.add('open');}
+function closeM(id){document.getElementById(id)?.classList.remove('open');}
+
+function initAtl(id){
+  const a=id?ath(id):{id:gid('A'),nome:'',cogn:'',num:D.atleti.length+1,cat:'',annoNascita:'',licenza:''};
+  document.getElementById('atl-id').value=a.id;
+  document.getElementById('atl-nome').value=a.nome;
+  document.getElementById('atl-cogn').value=a.cogn;
+  document.getElementById('atl-num').value=a.num;
+  document.getElementById('atl-cat').value=a.cat||'';
+  document.getElementById('atl-anno').value=a.annoNascita||'';
+  document.getElementById('atl-lic').value=a.licenza||'';
+  document.getElementById('modal-atl-title').textContent=id?'Modifica Atleta':'Nuovo Atleta';
+  document.getElementById('atl-del').style.display=id?'inline-block':'none';
+  openM('modal-atl');
+}
+function saveAtl(){
+  const id=document.getElementById('atl-id').value;
+  const obj={id,nome:document.getElementById('atl-nome').value.trim(),cogn:document.getElementById('atl-cogn').value.trim(),num:+document.getElementById('atl-num').value||1,cat:document.getElementById('atl-cat').value.trim(),annoNascita:document.getElementById('atl-anno').value,licenza:document.getElementById('atl-lic').value.trim()};
+  const idx=D.atleti.findIndex(x=>x.id===id);
+  if(idx>=0)D.atleti[idx]=obj;else D.atleti.push(obj);
+  save();closeM('modal-atl');render();
+}
+function delAtl(){
+  const id=document.getElementById('atl-id').value;
+  if(!confirm('Eliminare atleta?'))return;
+  D.atleti=D.atleti.filter(x=>x.id!==id);
+  D.bici=D.bici.filter(x=>x.aid!==id);
+  save();closeM('modal-atl');selAtl='';selBici='';tabs.atl=0;render();
+}
+
+function initBici(id,aid){
+  const b=id?bik(id):{id:gid('B'),aid:aid||selAtl,num:1,marca:'',mod:'',anno:new Date().getFullYear(),sn:'',taglia:'',km:0,gruppo:'',ruoteAll:'',ruoteGara:'',note:''};
+  document.getElementById('bc-id').value=b.id;
+  document.getElementById('bc-aid').value=b.aid;
+  document.getElementById('bc-num').value=b.num;
+  document.getElementById('bc-marca').value=b.marca;
+  document.getElementById('bc-mod').value=b.mod;
+  document.getElementById('bc-anno').value=b.anno;
+  document.getElementById('bc-sn').value=b.sn||'';
+  document.getElementById('bc-taglia').value=b.taglia||'';
+  document.getElementById('bc-km').value=b.km||0;
+  document.getElementById('bc-gruppo').value=b.gruppo||'';
+  document.getElementById('bc-rall').value=b.ruoteAll||'';
+  document.getElementById('bc-rgar').value=b.ruoteGara||'';
+  document.getElementById('bc-note').value=b.note||'';
+  document.getElementById('modal-bici-title').textContent=id?'Modifica Bici':'Nuova Bici';
+  document.getElementById('bc-del').style.display=id?'inline-block':'none';
+  openM('modal-bici');
+}
+function saveBici(){
+  const id=document.getElementById('bc-id').value;
+  const obj={id,aid:document.getElementById('bc-aid').value,num:+document.getElementById('bc-num').value||1,marca:document.getElementById('bc-marca').value.trim(),mod:document.getElementById('bc-mod').value.trim(),anno:+document.getElementById('bc-anno').value,sn:document.getElementById('bc-sn').value.trim(),taglia:document.getElementById('bc-taglia').value.trim(),km:+document.getElementById('bc-km').value||0,gruppo:document.getElementById('bc-gruppo').value.trim(),ruoteAll:document.getElementById('bc-rall').value.trim(),ruoteGara:document.getElementById('bc-rgar').value.trim(),note:document.getElementById('bc-note').value.trim()};
+  const idx=D.bici.findIndex(x=>x.id===id);
+  if(idx>=0)D.bici[idx]=obj;else D.bici.push(obj);
+  save();closeM('modal-bici');render();
+}
+function delBici(){
+  const id=document.getElementById('bc-id').value;
+  if(!confirm('Eliminare bici?'))return;
+  D.bici=D.bici.filter(x=>x.id!==id);
+  D.manutenzioni=D.manutenzioni.filter(x=>x.bid!==id);
+  save();closeM('modal-bici');selBici='';tabs.atl=1;render();
+}
+
+let cis=[];
+function updateZonePreview(){
+  const zone=zonaUsedInMnt(cis);
+  const el=document.getElementById('mnt-zone-prev');
+  if(el)el.innerHTML=zone.map(z=>`<span class="zona-pill ${ZONA_CLS[z.letter]||''}">${z.emoji} ${z.nome}</span>`).join(' ')||'<span style="color:var(--txt2)">—</span>';
+}
+function initMnt(id,bid){
+  const m=id?D.manutenzioni.find(x=>x.id===id):{id:gid('M'),bid:bid||selBici,data:tod(),tipo:'preventiva',desc:'',km:'',prox:'',ci:[],note:''};
+  cis=[...(m.ci||[])];
+  document.getElementById('mnt-id').value=m.id;
+  document.getElementById('mnt-bid').value=m.bid;
+  document.getElementById('mnt-data').value=m.data||tod();
+  document.getElementById('mnt-tipo').value=m.tipo||'preventiva';
+  document.getElementById('mnt-desc').value=m.desc||'';
+  document.getElementById('mnt-km').value=m.km||'';
+  document.getElementById('mnt-prox').value=m.prox||'';
+  document.getElementById('mnt-note').value=m.note||'';
+  document.getElementById('modal-mnt-title').textContent=id?'Modifica Manutenzione':'Nuova Manutenzione';
+  document.getElementById('mnt-del').style.display=id?'inline-block':'none';
+  rCI();openM('modal-mnt');
+}
+function rCI(){
+  const att=D.catalogo.filter(c=>c.stato!=='archiviato');
+  document.getElementById('mnt-ci-list').innerHTML=cis.map((ci,i)=>{const c=comp(ci.cid);return`<div class="ci-row"><span>${c?esc(c.desc):'?'}</span><span>×${ci.qty}</span><span>${c?fe(c.costo*ci.qty,0):''}</span><button class="btn-ico" onclick="cis.splice(${i},1);rCI();updateZonePreview()">✕</button></div>`;}).join('')||'<p style="color:var(--txt2);font-size:12px;">Nessun componente</p>';
+  updateZonePreview();
+}
+function addCI(){
+  const cid=document.getElementById('ci-comp')?.value;
+  const qty=+document.getElementById('ci-qty')?.value||1;
+  if(!cid)return;
+  const ex=cis.find(x=>x.cid===cid);
+  if(ex)ex.qty+=qty;else cis.push({cid,qty});
+  rCI();
+}
+function saveMnt(){
+  const id=document.getElementById('mnt-id').value;
+  const obj={id,bid:document.getElementById('mnt-bid').value,data:document.getElementById('mnt-data').value,tipo:document.getElementById('mnt-tipo').value,desc:document.getElementById('mnt-desc').value.trim(),km:document.getElementById('mnt-km').value||'',prox:document.getElementById('mnt-prox').value||'',ci:[...cis],note:document.getElementById('mnt-note').value.trim()};
+  const idx=D.manutenzioni.findIndex(x=>x.id===id);
+  if(idx>=0)D.manutenzioni[idx]=obj;else D.manutenzioni.push(obj);
+  // Aggiorna km bici se valorizzato
+  if(obj.km){const b=bik(obj.bid);if(b&&+obj.km>+(b.km||0)){b.km=+obj.km;}}
+  // Scala giacenza per componenti usati
+  cis.forEach(ci=>{const c=comp(ci.cid);if(c&&obj.tipo!=='ingresso'){c.giac=Math.max(0,(c.giac||0)-ci.qty);}});
+  save();closeM('modal-mnt');render();
+}
+function delMnt(){
+  const id=document.getElementById('mnt-id').value;
+  if(!confirm('Eliminare manutenzione?'))return;
+  D.manutenzioni=D.manutenzioni.filter(x=>x.id!==id);
+  save();closeM('modal-mnt');render();
+}
+
+function initGara(id){
+  const g=id?gara(id):{id:gid('G'),data:tod(),nome:'',luogo:'',nazione:'ITALIA',tipo:'INT',stato:'provvisorio',partecipanti:[],note:''};
+  document.getElementById('gar-id').value=g.id;
+  document.getElementById('gar-data').value=g.data;
+  document.getElementById('gar-nome').value=g.nome;
+  document.getElementById('gar-luogo').value=g.luogo;
+  document.getElementById('gar-nazione').value=g.nazione;
+  document.getElementById('gar-tipo').value=g.tipo;
+  document.getElementById('gar-stato').value=g.stato;
+  document.getElementById('gar-note').value=g.note||'';
+  document.getElementById('modal-gara-title').textContent=id?'Modifica Gara':'Nuova Gara';
+  document.getElementById('gar-del').style.display=id?'inline-block':'none';
+  openM('modal-gara');
+}
+function saveGara(){
+  const id=document.getElementById('gar-id').value;
+  const existing=gara(id);
+  const obj={id,data:document.getElementById('gar-data').value,nome:document.getElementById('gar-nome').value.trim(),luogo:document.getElementById('gar-luogo').value.trim(),nazione:document.getElementById('gar-nazione').value.trim(),tipo:document.getElementById('gar-tipo').value,stato:document.getElementById('gar-stato').value,partecipanti:existing?.partecipanti||[],note:document.getElementById('gar-note').value.trim()};
+  const idx=D.gare.findIndex(x=>x.id===id);
+  if(idx>=0)D.gare[idx]=obj;else D.gare.push(obj);
+  save();closeM('modal-gara');render();
+}
+function delGara(){
+  const id=document.getElementById('gar-id').value;
+  if(!confirm('Eliminare gara?'))return;
+  D.gare=D.gare.filter(x=>x.id!==id);
+  save();closeM('modal-gara');if(selGara===id){selGara='';tabs.gare=0;}render();
+}
+
+function initMov(id){
+  const mv=id?D.movimenti.find(x=>x.id===id):{id:gid('MV'),data:tod(),tipo:'ingresso',cid:'',qty:1,caus:'',mec:'',aid:''};
+  document.getElementById('mov-id').value=mv.id;
+  document.getElementById('mov-data').value=mv.data||tod();
+  document.getElementById('mov-tipo').value=mv.tipo||'ingresso';
+  document.getElementById('mov-comp').value=mv.cid||'';
+  document.getElementById('mov-qty').value=mv.qty||1;
+  document.getElementById('mov-caus').value=mv.caus||'';
+  document.getElementById('mov-aid').value=mv.aid||'';
+  openM('modal-mov');
+}
+function toggleAtlF(v){document.getElementById('mov-atl-wrap').style.display=v==='uscita'?'block':'none';}
+function toggleCustomCaus(v){document.getElementById('mov-custom-caus').style.display=v==='custom'?'block':'none';}
+function saveMov(){
+  const id=document.getElementById('mov-id').value;
+  const tipo=document.getElementById('mov-tipo').value;
+  const cid=document.getElementById('mov-comp').value;
+  const qty=+document.getElementById('mov-qty').value||1;
+  const causEl=document.getElementById('mov-caus');
+  let caus=causEl?.value==='custom'?document.getElementById('mov-custom-text')?.value||'':causEl?.value||'';
+  const aid=document.getElementById('mov-aid')?.value||'';
+  if(!cid){alert('Seleziona un componente');return;}
+  const c=comp(cid);if(!c)return;
+  if(tipo==='uscita'&&c.giac<qty){alert('Giacenza insufficiente');return;}
+  if(tipo==='uscita')c.giac-=qty;else c.giac+=qty;
+  const obj={id,data:document.getElementById('mov-data').value,tipo,cid,qty,caus,mec:'',aid};
+  const idx=D.movimenti.findIndex(x=>x.id===id);
+  if(idx>=0)D.movimenti[idx]=obj;else D.movimenti.push(obj);
+  save();closeM('modal-mov');render();
+}
+
+function reRig(){render();}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`cx_team_${tod()}.json`;a.click();
+}
+
+function importJSON(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        if(!data||typeof data!=='object'||Array.isArray(data)){alert('File JSON non valido');return;}
+        D={...DEF,...data};localStorage.setItem(SK,JSON.stringify(D));
+        render();alert('✅ Dati importati con successo!');
+      }catch(e){alert('Errore nel file JSON: '+e.message);}
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+// === GOOGLE DRIVE SYNC (v1.5) ===
+function driveClick(){
+  if(gdriveToken){
+    // già connesso: mostra stato e offre sync manuale
+    openM('modal-drive');
+    const body=document.getElementById('drive-modal-body');
+    const foot=document.getElementById('drive-modal-foot');
+    if(body)body.innerHTML='<p>✅ <strong>Drive connesso.</strong></p><p>I dati vengono sincronizzati automaticamente ad ogni salvataggio.</p>';
+    if(foot)foot.innerHTML='<button class="btn bp" onclick="loadFromCloud();closeM(\'modal-drive\')">⬇ Carica da Drive</button><button class="btn bs" onclick="closeM(\'modal-drive\')">Chiudi</button>';
+  }else{
+    initGSI();
+  }
+}
+const GDRIVE_CLIENT_ID='353218973618-7ie63fopjmt8khbc0sgs3b9e47kdt0og.apps.googleusercontent.com';
+const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.appdata';
+const GDRIVE_FILE='cx_team_data.json';
+let gdriveToken=null,gdriveFileId=null;
+
+function initGSI(){
+  if(!window.google){setSyncState('error');return;}
+  google.accounts.oauth2.initTokenClient({
+    client_id:GDRIVE_CLIENT_ID,
+    scope:GDRIVE_SCOPE,
+    callback:(resp)=>{
+      if(resp.error){setSyncState('error');return;}
+      gdriveToken=resp.access_token;
+      setSyncState('signedin');
+      loadFromCloud();
+    }
+  }).requestAccessToken();
+}
+function setSyncState(state){
+  const btn=document.getElementById('sync-btn');
+  if(!btn)return;
+  btn.className='sync-btn '+state;
+  const labels={default:'☁️ Sync Drive',syncing:'⏳ Sincronizzazione…',synced:'✅ Sincronizzato',error:'❌ Errore',signedin:'✅ Drive Connesso'};
+  btn.textContent=labels[state]||'☁️ Sync Drive';
+}
+async function saveToCloud(){
+  if(!gdriveToken)return;
+  setSyncState('syncing');
+  const body=JSON.stringify(D);
+  try{
+    if(gdriveFileId){
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,{method:'PATCH',headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},body});
+    }else{
+      const meta=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name+%3D+%27cx_team_data.json%27',{headers:{'Authorization':'Bearer '+gdriveToken}}).then(r=>r.json());
+      if(meta.files&&meta.files.length){
+        gdriveFileId=meta.files[0].id;
+        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,{method:'PATCH',headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},body});
+      }else{
+        const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'multipart/related; boundary=boundary'},body:'--boundary\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:GDRIVE_FILE,parents:['appDataFolder']})+'\r\n--boundary\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--boundary--'}).then(r=>r.json());
+        gdriveFileId=res.id;
+      }
+    }
+    setSyncState('synced');
+  }catch(e){setSyncState('error');}
+}
+async function loadFromCloud(){
+  if(!gdriveToken)return;
+  setSyncState('syncing');
+  try{
+    const meta=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name+%3D+%27cx_team_data.json%27',{headers:{'Authorization':'Bearer '+gdriveToken}}).then(r=>r.json());
+    if(meta.files&&meta.files.length){
+      gdriveFileId=meta.files[0].id;
+      const data=await fetch(`https://www.googleapis.com/drive/v3/files/${gdriveFileId}?alt=media`,{headers:{'Authorization':'Bearer '+gdriveToken}}).then(r=>r.json());
+      D=data;localStorage.setItem(SK,JSON.stringify(D));render();
+    }
+    setSyncState('synced');
+  }catch(e){setSyncState('error');}
+}
+
+// === MODAL comp save/del ===
+function saveMComp(){
+  const id=document.getElementById('mc-id')?.value;
+  const idx=D.catalogo.findIndex(x=>x.id===id);
+  const obj=idx>=0?{...D.catalogo[idx]}:{id,codice:'',codArea:'',codCat:'',codSubcat:'',prezzoStorico:[]};
+  obj.desc=document.getElementById('mc-desc')?.value.trim()||'';
+  obj.um=document.getElementById('mc-um')?.value||'pz';
+  const nuovoCosto=+document.getElementById('mc-costo')?.value||0;
+  if(nuovoCosto!==obj.costo){obj.prezzoStorico=[...(obj.prezzoStorico||[]),{data:tod(),v:nuovoCosto}];}
+  obj.costo=nuovoCosto;
+  obj.giac=+document.getElementById('mc-giac')?.value||0;
+  obj.smin=+document.getElementById('mc-smin')?.value||0;
+  obj.fornitore=document.getElementById('mc-forn')?.value||'';
+  obj.leadtime=+document.getElementById('mc-lt')?.value||7;
+  obj.posizione=document.getElementById('mc-pos')?.value||'A-1';
+  obj.stato=document.getElementById('mc-stato')?.value||'attivo';
+  obj.noteComp=document.getElementById('mc-note')?.value||'';
+  if(idx>=0)D.catalogo[idx]=obj;else D.catalogo.push(obj);
+  save();closeM('modal-comp');render();
+}
+function delMComp(){
+  const id=document.getElementById('mc-id')?.value;
+  if(!confirm('Archiviare componente?'))return;
+  const c=D.catalogo.find(x=>x.id===id);
+  if(c){c.stato='archiviato';}
+  save();closeM('modal-comp');render();
+}
+
+load();nav('dash');
+</script>
+</body>
+</html>
