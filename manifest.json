@@ -1,0 +1,23 @@
+{
+  "name": "CX Team Manager",
+  "short_name": "CX Team",
+  "description": "Gestione tecnica team ciclocross — stagione 2026/27",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1722",
+  "theme_color": "#ff6b35",
+  "lang": "it",
+  "categories": ["sports", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "./#dash", "description": "Apri Dashboard" },
+    { "name": "Magazzino", "url": "./#mag", "description": "Apri Magazzino" },
+    { "name": "Calendario", "url": "./#cal", "description": "Apri Calendario Gare" }
+  ]
+}

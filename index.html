@@ -6,10 +6,36 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CX Manager">
-<meta name="theme-color" content="#151f2b">
+<meta name="apple-mobile-web-app-title" content="CX Team">
+<meta name="theme-color" content="#ff6b35">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>CX Team Manager</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>{
+        // Controlla aggiornamenti
+        reg.addEventListener('updatefound',()=>{
+          const nw=reg.installing;
+          nw.addEventListener('statechange',()=>{
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              if(confirm('🔄 Nuova versione disponibile. Aggiornare ora?')){
+                nw.postMessage('skipWaiting');
+                window.location.reload();
+              }
+            }
+          });
+        });
+      })
+      .catch(e=>console.warn('SW non registrato:',e));
+  });
+}
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
 body{background:#f0f2f5;display:flex;height:100vh;overflow:hidden;color:#1e2a3a}
@@ -198,11 +224,11 @@ input[type=checkbox]{width:auto;margin:0}
 /* ── MOBILE RESPONSIVE ── */
 @media(max-width:768px){
   #sb{display:none}
-  #bottom-nav{display:flex}
+  #bottom-nav{display:flex;height:68px;padding-bottom:max(8px,env(safe-area-inset-bottom))}
   #main{height:100dvh}
-  #content{padding:12px 14px 80px}
+  #content{padding:12px 14px 88px}
   .tabs{margin:-12px -14px 14px}
-  #topbar{padding:10px 14px}
+  #topbar{padding:10px 14px;min-height:52px}
   #pg-title{font-size:15px}
   .srow{grid-template-columns:repeat(2,1fr);gap:10px}
   .g2{grid-template-columns:1fr}
@@ -210,17 +236,32 @@ input[type=checkbox]{width:auto;margin:0}
   .fr3{grid-template-columns:1fr 1fr}
   .agrid{grid-template-columns:repeat(2,1fr)}
   .brow{grid-template-columns:1fr}
-  .modal{width:96%;max-height:95vh;border-radius:12px 12px 0 0;margin-top:auto;align-self:flex-end}
+  /* Modal slide-up da fondo schermo */
   .mbg{align-items:flex-end}
+  .modal{width:100%;max-height:92dvh;border-radius:16px 16px 0 0;margin:0;animation:slideUp .25s ease}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .mh{padding:14px 16px;position:sticky;top:0;z-index:2;background:inherit;border-radius:16px 16px 0 0}
+  .mb{padding:14px 16px;-webkit-overflow-scrolling:touch}
+  .mf{padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));position:sticky;bottom:0;background:white;border-top:1px solid #e4e9ef}
+  /* Input più grandi — touch-friendly */
+  input,select,textarea{font-size:16px!important;min-height:44px;padding:10px 12px!important}
+  .btn{min-height:44px;padding:10px 16px!important;font-size:14px!important}
   .fr2{grid-template-columns:1fr}
   table{font-size:12px}
   thead th{font-size:10px;padding:6px 8px}
-  tbody td{padding:7px 8px}
+  tbody td{padding:8px 8px}
+  /* Bottom nav item: area tap 44px min */
+  .bn-item{min-height:44px;padding:8px 4px}
+  .bn-ico{font-size:22px}
+  /* Topbar: bottoni affiancati senza shrink */
+  #topbar{gap:6px;flex-wrap:wrap}
+  #topbar .btn{padding:7px 10px!important;font-size:12px!important;min-height:36px}
 }
 @media(max-width:480px){
   .srow{grid-template-columns:1fr 1fr}
   .g3{grid-template-columns:1fr 1fr}
   .agrid{grid-template-columns:1fr 1fr}
+  #topbar .btn span{display:none}
 }
 </style>
 </head>
