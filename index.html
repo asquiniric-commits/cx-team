@@ -764,7 +764,8 @@ const DEF={
   ],
 };
 
-function load(){const s=localStorage.getItem(SK);if(s){try{D=JSON.parse(s);}catch(e){D=JSON.parse(JSON.stringify(DEF));}}else{D=JSON.parse(JSON.stringify(DEF));save();}}
+function load(){const s=localStorage.getItem(SK);if(s){try{D=JSON.parse(s);// Migrazione: se ruote manca o non ha struttura ant/pst, re-inizializza da DEF
+if(!D.ruote||!D.ruote.length||!D.ruote[0].ant){D.ruote=JSON.parse(JSON.stringify(DEF.ruote));save();}}catch(e){D=JSON.parse(JSON.stringify(DEF));}}else{D=JSON.parse(JSON.stringify(DEF));save();}}
 function save(){localStorage.setItem(SK,JSON.stringify(D));saveToCloud();}
 function gid(p){return p+Date.now().toString(36).toUpperCase().slice(-6);}
 function fd(d){if(!d)return'—';const[y,m,g]=d.split('-');return`${g}/${m}/${y}`;}
