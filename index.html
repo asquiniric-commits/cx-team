@@ -324,20 +324,20 @@ input[type=checkbox]{width:auto;margin:0}
 <!-- MODAL: Atleta -->
 <div class="mbg" id="modal-atl">
   <div class="modal">
-    <div class="mh"><div class="mh-t" id="ma-title">Aggiungi Atleta</div><button class="mcl" onclick="closeM('modal-atl')">✕</button></div>
+    <div class="mh"><div class="mh-t" id="modal-atl-title">Aggiungi Atleta</div><button class="mcl" onclick="closeM('modal-atl')">✕</button></div>
     <div class="mb">
-      <input type="hidden" id="ma-id">
+      <input type="hidden" id="atl-id">
       <div class="fr2">
-        <div class="fg"><label>Nome *</label><input id="ma-nome"></div>
-        <div class="fg"><label>Cognome *</label><input id="ma-cogn"></div>
+        <div class="fg"><label>Nome *</label><input id="atl-nome"></div>
+        <div class="fg"><label>Cognome *</label><input id="atl-cogn"></div>
       </div>
       <div class="fr3">
-        <div class="fg"><label>N° Atleta</label><input type="number" id="ma-num" min="1"></div>
-        <div class="fg"><label>Anno di Nascita</label><input type="number" id="ma-anno" placeholder="2005" min="1980" max="2020"></div>
-        <div class="fg"><label>N° Licenza</label><input id="ma-licenza" placeholder="FCI / UCI"></div>
+        <div class="fg"><label>N° Atleta</label><input type="number" id="atl-num" min="1"></div>
+        <div class="fg"><label>Anno di Nascita</label><input type="number" id="atl-anno" placeholder="2005" min="1980" max="2020"></div>
+        <div class="fg"><label>N° Licenza</label><input id="atl-lic" placeholder="FCI / UCI"></div>
       </div>
       <div class="fg"><label>Categoria CX *</label>
-        <select id="ma-cat">
+        <select id="atl-cat">
           <option value="">Seleziona categoria…</option>
           <optgroup label="Senior"><option value="Elite M">Elite M</option><option value="Elite F">Elite F</option></optgroup>
           <optgroup label="Under 23"><option value="Under 23 M">Under 23 M</option><option value="Under 23 F">Under 23 F</option></optgroup>
@@ -348,40 +348,40 @@ input[type=checkbox]{width:auto;margin:0}
         </select>
       </div>
     </div>
-    <div class="mf"><button class="btn bs" onclick="closeM('modal-atl')">Annulla</button><button class="btn bp" onclick="saveAtl()">💾 Salva</button></div>
+    <div class="mf"><button class="btn bd" id="atl-del" onclick="delAtl()" style="display:none">🗑 Elimina</button><button class="btn bs" onclick="closeM('modal-atl')">Annulla</button><button class="btn bp" onclick="saveAtl()">💾 Salva</button></div>
   </div>
 </div>
 <!-- MODAL: Bici -->
 <div class="mbg" id="modal-bici">
   <div class="modal modal-lg">
-    <div class="mh"><div class="mh-t" id="mb-title">Aggiungi Bicicletta</div><button class="mcl" onclick="closeM('modal-bici')">✕</button></div>
+    <div class="mh"><div class="mh-t" id="modal-bici-title">Aggiungi Bicicletta</div><button class="mcl" onclick="closeM('modal-bici')">✕</button></div>
     <div class="mb">
-      <input type="hidden" id="mb-id">
+      <input type="hidden" id="bc-id">
       <div class="fr2">
-        <div class="fg"><label>Atleta *</label><select id="mb-atl"></select></div>
-        <div class="fg"><label>Bici N°</label><select id="mb-num"><option value="1">Bici 1</option><option value="2">Bici 2</option></select></div>
+        <div class="fg"><label>Atleta *</label><select id="bc-aid"></select></div>
+        <div class="fg"><label>Bici N°</label><select id="bc-num"><option value="1">Bici 1</option><option value="2">Bici 2</option></select></div>
       </div>
       <div class="fr2">
-        <div class="fg"><label>Marca *</label><input id="mb-marca" placeholder="Pinarello, Specialized…"></div>
-        <div class="fg"><label>Modello *</label><input id="mb-mod" placeholder="F9 Crossista, Crux…"></div>
+        <div class="fg"><label>Marca *</label><input id="bc-marca" placeholder="Pinarello, Specialized…"></div>
+        <div class="fg"><label>Modello *</label><input id="bc-mod" placeholder="F9 Crossista, Crux…"></div>
       </div>
       <div class="fr3">
-        <div class="fg"><label>Anno</label><input type="number" id="mb-anno" placeholder="2024"></div>
-        <div class="fg"><label>Taglia</label><input id="mb-taglia" placeholder="54"></div>
-        <div class="fg"><label>Km Attuali</label><input type="number" id="mb-km" placeholder="0" min="0"></div>
+        <div class="fg"><label>Anno</label><input type="number" id="bc-anno" placeholder="2024"></div>
+        <div class="fg"><label>Taglia</label><input id="bc-taglia" placeholder="54"></div>
+        <div class="fg"><label>Km Attuali</label><input type="number" id="bc-km" placeholder="0" min="0"></div>
       </div>
-      <div class="fg"><label>N° Telaio / S/N</label><input id="mb-sn" placeholder="Numero seriale telaio"></div>
+      <div class="fg"><label>N° Telaio / S/N</label><input id="bc-sn" placeholder="Numero seriale telaio"></div>
       <div style="background:#f8f9fb;border-radius:8px;padding:14px;margin-top:4px">
         <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">⚙️ Equipaggiamento</div>
-        <div class="fg"><label>Gruppo Trasmissione</label><input id="mb-gruppo" placeholder="es. Sram Force 1×12 velocità"></div>
+        <div class="fg"><label>Gruppo Trasmissione</label><input id="bc-gruppo" placeholder="es. Sram Force 1×12 velocità"></div>
         <div class="fr2">
-          <div class="fg"><label>Ruote Allenamento</label><input id="mb-ruote-all" placeholder="es. Most carbonio tubeless"></div>
-          <div class="fg"><label>Ruote Gara</label><input id="mb-ruote-gara" placeholder="es. Ruote gara specifiche"></div>
+          <div class="fg"><label>Ruote Allenamento</label><input id="bc-rall" placeholder="es. Most carbonio tubeless"></div>
+          <div class="fg"><label>Ruote Gara</label><input id="bc-rgar" placeholder="es. Ruote gara specifiche"></div>
         </div>
       </div>
-      <div class="fg" style="margin-top:10px"><label>Note</label><textarea id="mb-note" style="min-height:44px"></textarea></div>
+      <div class="fg" style="margin-top:10px"><label>Note</label><textarea id="bc-note" style="min-height:44px"></textarea></div>
     </div>
-    <div class="mf"><button class="btn bs" onclick="closeM('modal-bici')">Annulla</button><button class="btn bp" onclick="saveBici()">💾 Salva</button></div>
+    <div class="mf"><button class="btn bd" id="bc-del" onclick="delBici()" style="display:none">🗑 Elimina</button><button class="btn bs" onclick="closeM('modal-bici')">Annulla</button><button class="btn bp" onclick="saveBici()">💾 Salva</button></div>
   </div>
 </div>
 <!-- MODAL: Manutenzione -->
@@ -647,6 +647,50 @@ input[type=checkbox]{width:auto;margin:0}
     <div class="mf">
       <button class="btn bs" onclick="closeM('modal-assruo')">Annulla</button>
       <button class="btn bp" onclick="saveAssRuo()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+<div class="mbg" id="modal-comp">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mh-t" id="mc-title">Nuovo Componente</div><button class="mcl" onclick="closeM('modal-comp')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mc-id">
+      <div class="fg"><label>Descrizione *</label><input id="mc-desc" placeholder="es. Catena SRAM XX1 Eagle 12v"></div>
+      <div class="fr3">
+        <div class="fg"><label>Unità di Misura</label>
+          <select id="mc-um">
+            <option value="pz">pz</option>
+            <option value="coppia">coppia</option>
+            <option value="flacone">flacone</option>
+            <option value="kit">kit</option>
+            <option value="m">m</option>
+            <option value="set">set</option>
+          </select>
+        </div>
+        <div class="fg"><label>Costo Unitario (€)</label><input type="number" id="mc-costo" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="fg"><label>Giacenza Attuale</label><input type="number" id="mc-giac" min="0" placeholder="0"></div>
+      </div>
+      <div class="fr3">
+        <div class="fg"><label>Scorta Minima</label><input type="number" id="mc-smin" min="0" placeholder="0"></div>
+        <div class="fg"><label>Fornitore</label><input id="mc-forn" placeholder="es. Probike SRL"></div>
+        <div class="fg"><label>Lead Time (giorni)</label><input type="number" id="mc-lt" min="1" placeholder="7"></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Posizione Magazzino</label><input id="mc-pos" placeholder="es. A-1"></div>
+        <div class="fg"><label>Stato</label>
+          <select id="mc-stato">
+            <option value="attivo">✅ Attivo</option>
+            <option value="esaurito">⚠️ Esaurito</option>
+            <option value="archiviato">🗄️ Archiviato</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Note</label><textarea id="mc-note" rows="2" placeholder="Note aggiuntive…"></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn bd" id="mc-del" onclick="delMComp()" style="display:none">🗑 Archivia</button>
+      <button class="btn bs" onclick="closeM('modal-comp')">Annulla</button>
+      <button class="btn bp" onclick="saveMComp()">💾 Salva</button>
     </div>
   </div>
 </div>
@@ -944,7 +988,7 @@ function rCat(){
   const att=D.catalogo.filter(c=>c.stato!=='archiviato');
   const sott=att.filter(c=>(c.giac||0)<=(c.smin||0));
   return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-  <button class="btn btn-p" onclick="setTab('mag',4)">➕ Nuovo</button>
+  <button class="btn btn-p" onclick="openMComp('')">➕ Nuovo</button>
   <button class="btn btn-s" onclick="showQMode(null);document.getElementById('modal-qm').classList.add('open')">⚡ Mov. Rapido</button>
   <input class="search-in" placeholder="🔍 Cerca..." oninput="filtraCat(this.value)">
 </div>
