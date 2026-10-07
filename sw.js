@@ -1,5 +1,5 @@
-// CX Team Manager — Service Worker v1.0
-const CACHE = 'cx-team-v1';
+// CX Team Manager — Service Worker v2.0
+const CACHE = 'cx-team-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -29,23 +29,42 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: cache-first, poi rete
+// Fetch: network-first per HTML (così vede sempre aggiornamenti), cache-first per assets statici
 self.addEventListener('fetch', e => {
-  // Ignora richieste non-GET e Google APIs (Drive sync deve andare sempre in rete)
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('googleapis.com') || e.request.url.includes('accounts.google.com')) return;
 
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(response => {
-        if (!response || response.status !== 200 || response.type === 'opaque') return response;
-        const clone = response.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return response;
-      });
-    }).catch(() => caches.match('./index.html'))
-  );
+  const url = new URL(e.request.url);
+  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '';
+
+  if (isHTML) {
+    // Network-first per HTML: prova sempre la rete, fallback alla cache
+    e.respondWith(
+      fetch(e.request)
+        .then(response => {
+          if (!response || response.status !== 200 || response.type === 'opaque') {
+            return caches.match(e.request) || response;
+          }
+          const clone = response.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(e.request) || caches.match('./index.html'))
+    );
+  } else {
+    // Cache-first per assets statici (icone, manifest)
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(response => {
+          if (!response || response.status !== 200 || response.type === 'opaque') return response;
+          const clone = response.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return response;
+        });
+      }).catch(() => caches.match('./index.html'))
+    );
+  }
 });
 
 // Messaggio per forzare aggiornamento
