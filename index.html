@@ -387,43 +387,44 @@ input[type=checkbox]{width:auto;margin:0}
 <!-- MODAL: Manutenzione -->
 <div class="mbg" id="modal-mnt">
   <div class="modal modal-lg">
-    <div class="mh"><div class="mh-t" id="mm-title">Registra Manutenzione</div><button class="mcl" onclick="closeM('modal-mnt')">✕</button></div>
+    <div class="mh"><div class="mh-t" id="modal-mnt-title">Registra Manutenzione</div><button class="mcl" onclick="closeM('modal-mnt')">✕</button></div>
     <div class="mb">
-      <input type="hidden" id="mm-id">
+      <input type="hidden" id="mnt-id">
       <div class="fr2">
-        <div class="fg"><label>Bicicletta *</label><select id="mm-bici"></select></div>
-        <div class="fg"><label>Tipo *</label><select id="mm-tipo"><option value="preventiva">🔧 Preventiva</option><option value="correttiva">⚠️ Correttiva</option><option value="pre-gara">🏁 Pre-Gara</option><option value="post-gara">✅ Post-Gara</option></select></div>
+        <div class="fg"><label>Bicicletta *</label><select id="mnt-bid"></select></div>
+        <div class="fg"><label>Tipo *</label><select id="mnt-tipo"><option value="preventiva">🔧 Preventiva</option><option value="correttiva">⚠️ Correttiva</option><option value="pre-gara">🏁 Pre-Gara</option><option value="post-gara">✅ Post-Gara</option></select></div>
       </div>
       <div class="fr2">
-        <div class="fg"><label>Data *</label><input type="date" id="mm-data"></div>
-        <div class="fg"><label>Meccanico</label><input id="mm-mec" placeholder="Nome meccanico"></div>
+        <div class="fg"><label>Data *</label><input type="date" id="mnt-data"></div>
+        <div class="fg"><label>Km Bici</label><input type="number" id="mnt-km" placeholder="es. 1250" min="0"></div>
       </div>
-      <div class="fg"><label>Descrizione *</label><textarea id="mm-desc" placeholder="Descrivi l'intervento…"></textarea></div>
-      <div class="fr2">
-        <div class="fg"><label>Ore impiegate</label><input type="number" id="mm-ore" placeholder="1.0" step="0.5" min="0"></div>
-        <div class="fg"><label>Prossima manutenzione</label><input type="date" id="mm-prox"></div>
-      </div>
+      <div class="fg"><label>Descrizione *</label><textarea id="mnt-desc" placeholder="Descrivi l'intervento…"></textarea></div>
+      <div class="fg"><label>Prossima manutenzione</label><input type="date" id="mnt-prox"></div>
       <div class="fg">
         <label>Componenti utilizzati</label>
-        <div id="ci-list"></div>
-        <button class="btn bs sm" type="button" onclick="addCI()" style="margin-top:6px">+ Aggiungi componente</button>
-        <div id="zone-used" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <select id="ci-comp" style="flex:1"></select>
+          <input type="number" id="ci-qty" value="1" min="1" style="width:70px">
+          <button class="btn bs sm" type="button" onclick="addCI()">+ Aggiungi</button>
+        </div>
+        <div id="mnt-ci-list"></div>
+        <div id="mnt-zone-prev" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
-      <div class="fg"><label>Note</label><textarea id="mm-note" style="min-height:44px"></textarea></div>
+      <div class="fg"><label>Note</label><textarea id="mnt-note" style="min-height:44px"></textarea></div>
     </div>
-    <div class="mf"><button class="btn bs" onclick="closeM('modal-mnt')">Annulla</button><button class="btn bp" onclick="saveMnt()">💾 Salva</button></div>
+    <div class="mf"><button class="btn bd" id="mnt-del" onclick="delMnt()" style="display:none">🗑 Elimina</button><button class="btn bs" onclick="closeM('modal-mnt')">Annulla</button><button class="btn bp" onclick="saveMnt()">💾 Salva</button></div>
   </div>
 </div>
 <!-- MODAL: Gara -->
 <div class="mbg" id="modal-gara">
   <div class="modal">
-    <div class="mh"><div class="mh-t" id="mg-title">Aggiungi Gara</div><button class="mcl" onclick="closeM('modal-gara')">✕</button></div>
+    <div class="mh"><div class="mh-t" id="modal-gara-title">Aggiungi Gara</div><button class="mcl" onclick="closeM('modal-gara')">✕</button></div>
     <div class="mb">
-      <input type="hidden" id="mg-id">
+      <input type="hidden" id="gar-id">
       <div class="fr2">
-        <div class="fg"><label>Data *</label><input type="date" id="mg-data"></div>
+        <div class="fg"><label>Data *</label><input type="date" id="gar-data"></div>
         <div class="fg"><label>Tipologia</label>
-          <select id="mg-tipo">
+          <select id="gar-tipo">
             <option value="INT">INT — Internazionale</option>
             <option value="INT/GRC">INT/GRC — Int. + Gran Prix</option>
             <option value="GRC">GRC — Gran Prix Regionale</option>
@@ -434,22 +435,22 @@ input[type=checkbox]{width:auto;margin:0}
           </select>
         </div>
       </div>
-      <div class="fg"><label>Nome Gara *</label><input id="mg-nome" placeholder="es. Coppa del Mondo Koksijde"></div>
+      <div class="fg"><label>Nome Gara *</label><input id="gar-nome" placeholder="es. Coppa del Mondo Koksijde"></div>
       <div class="fr2">
-        <div class="fg"><label>Luogo</label><input id="mg-luogo"></div>
-        <div class="fg"><label>Nazione</label><input id="mg-nazione"></div>
+        <div class="fg"><label>Luogo</label><input id="gar-luogo"></div>
+        <div class="fg"><label>Nazione</label><input id="gar-nazione"></div>
       </div>
       <div class="fg"><label>Stato</label>
-        <select id="mg-stato">
+        <select id="gar-stato">
           <option value="confermato">🟢 Confermata</option>
           <option value="provvisorio">🟡 Provvisoria</option>
           <option value="annullato">🔴 Annullata</option>
           <option value="tba">⚫ TBA</option>
         </select>
       </div>
-      <div class="fg"><label>Note</label><textarea id="mg-note" style="min-height:44px"></textarea></div>
+      <div class="fg"><label>Note</label><textarea id="gar-note" style="min-height:44px"></textarea></div>
     </div>
-    <div class="mf"><button class="btn bs" onclick="closeM('modal-gara')">Annulla</button><button class="btn bp" onclick="saveGara()">💾 Salva</button></div>
+    <div class="mf"><button class="btn bd" id="gar-del" onclick="delGara()" style="display:none">🗑 Elimina</button><button class="btn bs" onclick="closeM('modal-gara')">Annulla</button><button class="btn bp" onclick="saveGara()">💾 Salva</button></div>
   </div>
 </div>
 <!-- MODAL: Movimento -->
@@ -457,20 +458,21 @@ input[type=checkbox]{width:auto;margin:0}
   <div class="modal">
     <div class="mh"><div class="mh-t">Registra Movimento</div><button class="mcl" onclick="closeM('modal-mov')">✕</button></div>
     <div class="mb">
+      <input type="hidden" id="mov-id">
       <div class="fr2">
-        <div class="fg"><label>Tipo *</label><select id="mv-tipo" onchange="toggleAtlF()"><option value="ingresso">🟢 Ingresso</option><option value="uscita">🔴 Uscita</option></select></div>
-        <div class="fg"><label>Data *</label><input type="date" id="mv-data"></div>
+        <div class="fg"><label>Tipo *</label><select id="mov-tipo" onchange="toggleAtlF(this.value)"><option value="ingresso">🟢 Ingresso</option><option value="uscita">🔴 Uscita</option></select></div>
+        <div class="fg"><label>Data *</label><input type="date" id="mov-data"></div>
       </div>
-      <div class="fg"><label>Componente *</label><select id="mv-comp"></select></div>
+      <div class="fg"><label>Componente *</label><select id="mov-comp"></select></div>
       <div class="fr2">
-        <div class="fg"><label>Quantità *</label><input type="number" id="mv-qty" min="1" placeholder="1"></div>
-        <div class="fg"><label>Meccanico</label><input id="mv-mec" placeholder="Nome"></div>
+        <div class="fg"><label>Quantità *</label><input type="number" id="mov-qty" min="1" placeholder="1"></div>
+        <div class="fg"><label>Meccanico</label><input id="mov-mec" placeholder="Nome"></div>
       </div>
       <div class="fg"><label>Causale</label>
-        <select id="mv-caus-sel" onchange="toggleCustomCaus()"><option>Acquisto stagionale</option><option>Reintegro scorte</option><option>Sostituzione preventiva</option><option>Sostituzione post-gara</option><option>Rottura in gara</option><option>Rottura in allenamento</option><option>Scaduto/deteriorato</option><option value="_altro">✏️ Altro…</option></select>
-        <input id="mv-caus-custom" placeholder="Specifica causale…" style="margin-top:6px;display:none">
+        <select id="mov-caus" onchange="toggleCustomCaus(this.value)"><option value="Acquisto stagionale">Acquisto stagionale</option><option value="Reintegro scorte">Reintegro scorte</option><option value="Sostituzione preventiva">Sostituzione preventiva</option><option value="Sostituzione post-gara">Sostituzione post-gara</option><option value="Rottura in gara">Rottura in gara</option><option value="Rottura in allenamento">Rottura in allenamento</option><option value="Scaduto/deteriorato">Scaduto/deteriorato</option><option value="custom">✏️ Altro…</option></select>
+        <input id="mov-custom-text" placeholder="Specifica causale…" style="margin-top:6px;display:none">
       </div>
-      <div class="fg" id="mv-atl-f" style="display:none"><label>Atleta</label><select id="mv-atl"><option value="">— nessuno —</option></select></div>
+      <div class="fg" id="mov-atl-wrap" style="display:none"><label>Atleta</label><select id="mov-aid"><option value="">— nessuno —</option></select></div>
     </div>
     <div class="mf"><button class="btn bs" onclick="closeM('modal-mov')">Annulla</button><button class="btn bp" onclick="saveMov()">💾 Registra</button></div>
   </div>
@@ -1014,7 +1016,7 @@ function righecat(){}
 function rMov(){
   const mvs=[...D.movimenti].sort((a,b)=>b.data>a.data?1:-1).slice(0,50);
   return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-  <button class="btn btn-p" onclick="openM('modal-mov')">➕ Movimento</button>
+  <button class="btn btn-p" onclick="initMov('')">➕ Movimento</button>
 </div>
 <div class="table-wrap"><table class="tbl">
 <thead><tr><th>Data</th><th>Tipo</th><th>Componente</th><th>Qty</th><th>Causale</th><th>Atleta</th></tr></thead>
@@ -1476,6 +1478,9 @@ function updateZonePreview(){
 function initMnt(id,bid){
   const m=id?D.manutenzioni.find(x=>x.id===id):{id:gid('M'),bid:bid||selBici,data:tod(),tipo:'preventiva',desc:'',km:'',prox:'',ci:[],note:''};
   cis=[...(m.ci||[])];
+  // Popola select biciclette
+  const bidSel=document.getElementById('mnt-bid');
+  bidSel.innerHTML=D.bici.map(b=>{const a=ath(b.aid);return`<option value="${b.id}">${a?fn(a)+' Bici '+b.num:'Bici '+b.num} — ${b.marca} ${b.mod}</option>`;}).join('');
   document.getElementById('mnt-id').value=m.id;
   document.getElementById('mnt-bid').value=m.bid;
   document.getElementById('mnt-data').value=m.data||tod();
@@ -1490,6 +1495,8 @@ function initMnt(id,bid){
 }
 function rCI(){
   const att=D.catalogo.filter(c=>c.stato!=='archiviato');
+  const ciComp=document.getElementById('ci-comp');
+  if(ciComp)ciComp.innerHTML='<option value="">— seleziona —</option>'+att.map(c=>`<option value="${c.id}">${esc(c.desc)} (giac: ${c.giac})</option>`).join('');
   document.getElementById('mnt-ci-list').innerHTML=cis.map((ci,i)=>{const c=comp(ci.cid);return`<div class="ci-row"><span>${c?esc(c.desc):'?'}</span><span>×${ci.qty}</span><span>${c?fe(c.costo*ci.qty,0):''}</span><button class="btn-ico" onclick="cis.splice(${i},1);rCI();updateZonePreview()">✕</button></div>`;}).join('')||'<p style="color:var(--txt2);font-size:12px;">Nessun componente</p>';
   updateZonePreview();
 }
@@ -1550,13 +1557,20 @@ function delGara(){
 
 function initMov(id){
   const mv=id?D.movimenti.find(x=>x.id===id):{id:gid('MV'),data:tod(),tipo:'ingresso',cid:'',qty:1,caus:'',mec:'',aid:''};
+  // Popola select componenti
+  const compSel=document.getElementById('mov-comp');
+  compSel.innerHTML='<option value="">— seleziona componente —</option>'+D.catalogo.filter(c=>c.stato!=='archiviato').map(c=>`<option value="${c.id}">${esc(c.desc)} (giac: ${c.giac})</option>`).join('');
+  // Popola select atleti
+  const atlSel=document.getElementById('mov-aid');
+  atlSel.innerHTML='<option value="">— nessuno —</option>'+D.atleti.map(a=>`<option value="${a.id}">${fn(a)}</option>`).join('');
   document.getElementById('mov-id').value=mv.id;
   document.getElementById('mov-data').value=mv.data||tod();
   document.getElementById('mov-tipo').value=mv.tipo||'ingresso';
-  document.getElementById('mov-comp').value=mv.cid||'';
+  compSel.value=mv.cid||'';
   document.getElementById('mov-qty').value=mv.qty||1;
   document.getElementById('mov-caus').value=mv.caus||'';
-  document.getElementById('mov-aid').value=mv.aid||'';
+  atlSel.value=mv.aid||'';
+  toggleAtlF(mv.tipo||'ingresso');
   openM('modal-mov');
 }
 function toggleAtlF(v){document.getElementById('mov-atl-wrap').style.display=v==='uscita'?'block':'none';}
