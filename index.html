@@ -992,6 +992,7 @@ function rCat(){
   return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
   <button class="btn btn-p" onclick="openMComp('')">➕ Nuovo</button>
   <button class="btn btn-s" onclick="showQMode(null);document.getElementById('modal-qm').classList.add('open')">⚡ Mov. Rapido</button>
+  <button class="btn btn-s" onclick="genPDF('catalogo')">📄 PDF</button>
   <input class="search-in" placeholder="🔍 Cerca..." oninput="filtraCat(this.value)">
 </div>
 ${sott.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ Sotto scorta: ${sott.map(c=>esc(c.desc)).join(', ')}</div>`:''}
@@ -1017,6 +1018,7 @@ function rMov(){
   const mvs=[...D.movimenti].sort((a,b)=>b.data>a.data?1:-1).slice(0,50);
   return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
   <button class="btn btn-p" onclick="initMov('')">➕ Movimento</button>
+  <button class="btn btn-s" onclick="genPDF('movimenti')">📄 PDF</button>
 </div>
 <div class="table-wrap"><table class="tbl">
 <thead><tr><th>Data</th><th>Tipo</th><th>Componente</th><th>Qty</th><th>Causale</th><th>Atleta</th></tr></thead>
@@ -1076,8 +1078,9 @@ function rAtl(){
 }
 
 function rAtlTab(){
-  return`<div style="display:flex;gap:8px;margin-bottom:12px;">
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
   <button class="btn btn-p" onclick="initAtl()">➕ Atleta</button>
+  <button class="btn btn-s" onclick="genPDF('atleti')">📄 PDF</button>
 </div>
 <div class="atl-grid">${D.atleti.map(a=>{
   const bs=D.bici.filter(b=>b.aid===a.id);
@@ -1152,6 +1155,7 @@ function rMntTab(bid){
   return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
   <button class="btn btn-p" onclick="initMnt('','${bid}')">➕ Manutenzione</button>
   <button class="btn" onclick="setTab('atl',1)">← Bici</button>
+  <button class="btn btn-s" onclick="genPDF('manutenzioni')">📄 PDF</button>
 </div>
 <h3 style="margin-bottom:8px;">${fn(a)} — ${bn(b)}</h3>
 ${scad.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ ${scad.length} manutenzione/i scaduta/e</div>`:''}
@@ -1226,6 +1230,7 @@ function rCalendario(){
   const mesiOrd=Object.keys(byMese).sort();
   return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
   <button class="btn btn-p" onclick="initGara()">➕ Gara</button>
+  <button class="btn btn-s" onclick="genPDF('gare')">📄 PDF</button>
 </div>
 ${mesiOrd.map(mk=>{
   const[y,m]=mk.split('-');
@@ -1977,6 +1982,189 @@ function delMComp(){
   const c=D.catalogo.find(x=>x.id===id);
   if(c){c.stato='archiviato';}
   save();closeM('modal-comp');render();
+}
+
+// === PDF REPORT GENERATOR ===
+function genPDF(tipo){
+  const oggi=new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  const stagione=D.stagione||'2026-2027';
+  const css=`
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10.5px;color:#1e2a3a;line-height:1.45;background:white}
+@page{size:A4 portrait;margin:18mm 15mm 20mm 15mm}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:10px;border-bottom:3px solid #ff6b35;margin-bottom:18px}
+.hd-logo{font-size:17px;font-weight:900;color:#ff6b35}
+.hd-sub{font-size:8.5px;color:#7a8ba0;margin-top:3px}
+.hd-meta{font-size:8.5px;color:#7a8ba0;text-align:right}
+h2{font-size:14px;font-weight:700;margin-bottom:14px}
+h3{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#ff6b35;margin:18px 0 8px;padding-bottom:4px;border-bottom:2px solid #ff6b35}
+.sumbox{display:flex;border:1px solid #e4e9ef;border-radius:6px;overflow:hidden;margin-bottom:16px}
+.sumitem{flex:1;padding:10px 14px;border-right:1px solid #e4e9ef;text-align:center}
+.sumitem:last-child{border-right:none}
+.sumval{font-size:20px;font-weight:800;color:#ff6b35}
+.sumlbl{font-size:8px;color:#7a8ba0;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.sumval.red{color:#ef4444}.sumval.grn{color:#16a34a}
+table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10px}
+th{background:#1e2a3a;color:white;padding:5px 8px;text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px}
+td{padding:5px 8px;border-bottom:1px solid #e4e9ef;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb}
+.wtr td{background:#fff7ed!important}
+.cod{font-family:monospace;font-size:8.5px;font-weight:700;background:#1e2a3a;color:#ff6b35;padding:2px 5px;border-radius:3px}
+.bdg{display:inline-block;padding:1px 6px;border-radius:10px;font-size:8.5px;font-weight:600}
+.bg{background:#dcfce7;color:#16a34a}.br{background:#fee2e2;color:#dc2626}
+.bb{background:#dbeafe;color:#1d4ed8}.by{background:#fef9c3;color:#a16207}
+.bgy{background:#f1f5f9;color:#64748b}.bo{background:#ffedd5;color:#c2410c}
+.bpu{background:#ede9fe;color:#6d28d9}
+.tipo-UCI{background:#ede9fe;color:#5b21b6}.tipo-INT{background:#dbeafe;color:#1e40af}
+.tipo-NAZ{background:#dcfce7;color:#16a34a}.tipo-GRC{background:#ffedd5;color:#c2410c}.tipo-TBA{background:#f1f5f9;color:#64748b}
+.stato-confermato{background:#dcfce7;color:#16a34a}.stato-provvisorio{background:#fef9c3;color:#a16207}
+.stato-annullato{background:#fee2e2;color:#dc2626}.stato-tba{background:#f1f5f9;color:#64748b}
+.ac{background:white;border:1px solid #e4e9ef;border-radius:6px;padding:11px 14px;margin-bottom:10px;page-break-inside:avoid}
+.an{font-size:13px;font-weight:700}.as2{font-size:9px;color:#7a8ba0;margin-top:2px}
+.br2g{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.bcp{background:#f8f9fb;border-radius:4px;padding:7px 9px;font-size:9.5px}
+.ft{display:flex;justify-content:space-between;margin-top:18px;padding-top:8px;border-top:1px solid #e4e9ef;font-size:8px;color:#7a8ba0}
+`;
+
+  let title='',body='';
+
+  if(tipo==='catalogo'){
+    title='Catalogo Componenti';
+    const att=D.catalogo.filter(c=>c.stato!=='archiviato');
+    const totVal=att.reduce((s,c)=>s+(c.costo||0)*(c.giac||0),0);
+    const sott=att.filter(c=>(c.giac||0)<=(c.smin||0));
+    body=`<h2>📋 Catalogo Componenti Magazzino</h2>
+<div class="sumbox">
+  <div class="sumitem"><div class="sumval">${att.length}</div><div class="sumlbl">Articoli attivi</div></div>
+  <div class="sumitem"><div class="sumval red">${sott.length}</div><div class="sumlbl">Sotto scorta</div></div>
+  <div class="sumitem"><div class="sumval">${fe(totVal)}</div><div class="sumlbl">Valore stock</div></div>
+</div>
+<table><thead><tr><th>Codice</th><th>Descrizione</th><th>U.M.</th><th>Costo</th><th>Giacenza</th><th>S.Min</th><th>Posizione</th><th>Fornitore</th><th>Stato</th></tr></thead>
+<tbody>${att.map(c=>`<tr class="${(c.giac||0)<=(c.smin||0)?'wtr':''}">
+<td><span class="cod">${esc(c.codice||'—')}</span></td>
+<td>${esc(c.desc)}</td><td>${esc(c.um)}</td>
+<td>${fe(c.costo)}</td><td><strong>${c.giac||0}</strong></td><td>${c.smin||0}</td>
+<td>${esc(c.posizione||'—')}</td><td>${esc(c.fornitore||'—')}</td>
+<td><span class="bdg ${c.stato==='attivo'?'bg':'bgy'}">${esc(c.stato)}</span></td>
+</tr>`).join('')}</tbody></table>
+${sott.length?`<p style="font-size:9px;color:#c2410c;margin-top:-10px;">⚠️ Articoli in arancione sono sotto la scorta minima</p>`:''}`;
+  }
+
+  else if(tipo==='movimenti'){
+    title='Movimenti Magazzino';
+    const mvs=[...D.movimenti].sort((a,b)=>b.data>a.data?1:-1);
+    const ing=mvs.filter(m=>m.tipo==='ingresso').reduce((s,m)=>s+m.qty,0);
+    const usc=mvs.filter(m=>m.tipo==='uscita').reduce((s,m)=>s+m.qty,0);
+    body=`<h2>📦 Movimenti Magazzino</h2>
+<div class="sumbox">
+  <div class="sumitem"><div class="sumval">${mvs.length}</div><div class="sumlbl">Movimenti totali</div></div>
+  <div class="sumitem"><div class="sumval grn">${ing}</div><div class="sumlbl">Unità entrate</div></div>
+  <div class="sumitem"><div class="sumval red">${usc}</div><div class="sumlbl">Unità uscite</div></div>
+</div>
+<table><thead><tr><th>Data</th><th>Tipo</th><th>Componente</th><th>Qty</th><th>Causale</th><th>Meccanico</th><th>Atleta</th></tr></thead>
+<tbody>${mvs.map(m=>{const c=comp(m.cid),a=ath(m.aid);return`<tr>
+<td>${fd(m.data)}</td>
+<td><span class="bdg ${m.tipo==='ingresso'?'bg':'br'}">${m.tipo==='ingresso'?'↓ Entrata':'↑ Uscita'}</span></td>
+<td>${c?esc(c.desc):'—'}</td><td><strong>${m.qty}</strong></td>
+<td>${esc(m.caus||'—')}</td><td>${esc(m.mec||'—')}</td>
+<td>${a?fn(a):'—'}</td>
+</tr>`;}).join('')}</tbody></table>`;
+  }
+
+  else if(tipo==='atleti'){
+    title='Lista Atleti';
+    const totMnt=D.manutenzioni.length;
+    const totCostoAtl=D.manutenzioni.reduce((s,m)=>s+costoMnt(m),0);
+    body=`<h2>👥 Atleti &amp; Biciclette — Stagione ${stagione}</h2>
+<div class="sumbox">
+  <div class="sumitem"><div class="sumval">${D.atleti.length}</div><div class="sumlbl">Atleti</div></div>
+  <div class="sumitem"><div class="sumval">${D.bici.length}</div><div class="sumlbl">Biciclette</div></div>
+  <div class="sumitem"><div class="sumval">${totMnt}</div><div class="sumlbl">Manutenzioni</div></div>
+  <div class="sumitem"><div class="sumval">${fe(totCostoAtl)}</div><div class="sumlbl">Costo tot. mnt.</div></div>
+</div>
+${D.atleti.map(a=>{
+  const bs=D.bici.filter(b=>b.aid===a.id);
+  const ms=D.manutenzioni.filter(m=>bs.some(b=>b.id===m.bid));
+  const tot=ms.reduce((s,m)=>s+costoMnt(m),0);
+  return`<div class="ac">
+<div style="display:flex;justify-content:space-between;align-items:center">
+  <div><div class="an">#${a.num} — ${fn(a)}</div>
+  <div class="as2">${a.cat?`Cat. ${esc(a.cat)} &nbsp;·&nbsp; `:''}${a.annoNascita?`Nato ${a.annoNascita} &nbsp;·&nbsp; `:''}Lic.: ${a.licenza?esc(a.licenza):'n.d.'}</div></div>
+  <div style="text-align:right;font-size:9px;color:#7a8ba0">${bs.length} bici &nbsp;|&nbsp; ${ms.length} mnt. &nbsp;|&nbsp; ${fe(tot,0)}</div>
+</div>
+<div class="br2g">${bs.map(b=>`<div class="bcp"><strong>Bici ${b.num} — ${esc(b.marca)} ${esc(b.mod)}</strong><br><span style="color:#7a8ba0">${esc(b.gruppo||'—')}</span>${b.km?`<br>Km: ${b.km}`:''}</div>`).join('')}</div>
+</div>`;}).join('')}`;
+  }
+
+  else if(tipo==='gare'){
+    title='Calendario Gare';
+    const byMese={};
+    D.gare.forEach(g=>{const[y,m]=g.data.split('-');const k=`${y}-${m}`;if(!byMese[k])byMese[k]=[];byMese[k].push(g);});
+    const mesiOrd=Object.keys(byMese).sort();
+    const conf=D.gare.filter(g=>g.stato==='confermato').length;
+    const prov=D.gare.filter(g=>g.stato==='provvisorio').length;
+    const tba=D.gare.filter(g=>g.stato==='tba').length;
+    body=`<h2>🏁 Calendario Gare — Stagione ${stagione}</h2>
+<div class="sumbox">
+  <div class="sumitem"><div class="sumval">${D.gare.length}</div><div class="sumlbl">Gare totali</div></div>
+  <div class="sumitem"><div class="sumval grn">${conf}</div><div class="sumlbl">Confermate</div></div>
+  <div class="sumitem"><div class="sumval" style="color:#a16207">${prov}</div><div class="sumlbl">Provvisorie</div></div>
+  <div class="sumitem"><div class="sumval bgy" style="color:#64748b">${tba}</div><div class="sumlbl">TBA</div></div>
+</div>
+${mesiOrd.map(mk=>{
+  const[y,m]=mk.split('-');
+  const gs=byMese[mk].sort((a,b)=>a.data>b.data?1:-1);
+  return`<h3>${MESI[+m]} ${y}</h3>
+<table><thead><tr><th>Data</th><th>Gara</th><th>Luogo</th><th>Nazione</th><th>Tipo</th><th>Stato</th><th>Partecipanti</th></tr></thead>
+<tbody>${gs.map(g=>{const sg=STATI_GARA[g.stato]||STATI_GARA.provvisorio;return`<tr>
+<td><strong>${fdShort(g.data)}</strong></td>
+<td>${esc(g.nome)}${g.note?`<br><small style="color:#7a8ba0">${esc(g.note)}</small>`:''}</td>
+<td>${esc(g.luogo)}</td><td>${esc(g.nazione)}</td>
+<td><span class="bdg ${TIPO_CLS[g.tipo]||'bgy'}">${esc(g.tipo)}</span></td>
+<td><span class="bdg ${sg.cls}">${sg.emoji} ${sg.label}</span></td>
+<td>${g.partecipanti?.length||0}/${D.atleti.length}</td>
+</tr>`;}).join('')}</tbody></table>`;}).join('')}`;
+  }
+
+  else if(tipo==='manutenzioni'){
+    title='Log Manutenzioni';
+    const mnts=[...D.manutenzioni].sort((a,b)=>b.data>a.data?1:-1);
+    const totCosto=mnts.reduce((s,m)=>s+costoMnt(m),0);
+    const byBici={};mnts.forEach(m=>{if(!byBici[m.bid])byBici[m.bid]=[];byBici[m.bid].push(m);});
+    body=`<h2>🔧 Log Manutenzioni — Stagione ${stagione}</h2>
+<div class="sumbox">
+  <div class="sumitem"><div class="sumval">${mnts.length}</div><div class="sumlbl">Interventi</div></div>
+  <div class="sumitem"><div class="sumval">${Object.keys(byBici).length}</div><div class="sumlbl">Bici coinvolte</div></div>
+  <div class="sumitem"><div class="sumval">${fe(totCosto)}</div><div class="sumlbl">Costo totale</div></div>
+</div>
+<table><thead><tr><th>Data</th><th>Atleta</th><th>Bici</th><th>Tipo</th><th>Descrizione</th><th>Km</th><th>Pross. mnt.</th><th>Costo</th></tr></thead>
+<tbody>${mnts.map(m=>{const b=bik(m.bid),a=b?ath(b.aid):null;return`<tr>
+<td>${fd(m.data)}</td>
+<td>${a?fn(a):'—'}</td>
+<td>${b?bn(b):'—'}</td>
+<td><span class="bdg bgy">${esc(m.tipo||'—')}</span></td>
+<td>${esc(m.desc||'—')}</td>
+<td>${m.km||'—'}</td>
+<td>${m.prox?fd(m.prox):'—'}</td>
+<td>${fe(costoMnt(m))}</td>
+</tr>`;}).join('')}</tbody></table>`;
+  }
+
+  const html=`<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><title>CX Team — ${title}</title><style>${css}</style></head><body>
+<div class="hd">
+  <div><div class="hd-logo">⚙️ CX Team Manager</div><div class="hd-sub">Gestione Tecnica · Stagione ${stagione}</div></div>
+  <div class="hd-meta">Generato il ${oggi}<br><strong>${title}</strong></div>
+</div>
+${body}
+<div class="ft"><span>CX Team Manager · Stagione ${stagione}</span><span>${title} · ${oggi}</span></div>
+</body></html>`;
+
+  const w=window.open('','_blank','width=840,height=1120');
+  if(!w){alert('⚠️ Abilita i popup per generare il PDF, oppure controlla le impostazioni del browser.');return;}
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),700);
 }
 
 load();nav('dash');
