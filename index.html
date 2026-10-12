@@ -265,10 +265,42 @@ input[type=checkbox]{width:auto;margin:0}
 }
 .btn.bd{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
 .btn.bd:hover{background:#fecaca}
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:#0f1722;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0}
+.login-box{background:#151f2b;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.login-logo{font-size:22px;font-weight:900;color:#ff6b35;margin-bottom:4px}
+.login-sub{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:28px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:5px}
+.login-field input{width:100%;background:#0f1722;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px 14px;color:white;font-size:14px;outline:none;transition:border .15s}
+.login-field input:focus{border-color:#ff6b35}
+.login-btn{width:100%;background:#ff6b35;color:white;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .15s}
+.login-btn:hover{background:#e55a24}
+.login-err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fca5a5;border-radius:8px;padding:9px 12px;font-size:13px;margin-top:12px;display:none}
+#app{display:none}
 </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">⚙️ CX Team Manager</div>
+    <div class="login-sub">Gestione Tecnica · Stagione 2026/27</div>
+    <div class="login-field">
+      <label>ID Utente</label>
+      <input type="text" id="login-id" placeholder="es. admin" autocomplete="username" autocapitalize="none">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 Accedi</button>
+    <div class="login-err" id="login-err">ID o password non validi</div>
+  </div>
+</div>
+
+<div id="app">
 <!-- SIDEBAR DESKTOP -->
 <div id="sb">
   <div class="sb-logo">
@@ -288,7 +320,10 @@ input[type=checkbox]{width:auto;margin:0}
   <div class="sb-it" onclick="nav('kpi')"><span class="sb-ic">📈</span> KPI &amp; Usura</div>
   <div class="sb-sec">Operazioni</div>
   <div class="sb-it dis"><span class="sb-ic">📋</span> Checklist Gara <span class="sb-tag">presto</span></div>
-  <div class="sb-foot">v1.5 PWA · Fase 1 di 3</div>
+  <div class="sb-sec">Account</div>
+  <div class="sb-it" id="sb-utenti" onclick="nav('utenti')" style="display:none"><span class="sb-ic">👥</span> Utenti <span class="sb-tag">admin</span></div>
+  <div class="sb-it" onclick="doLogout()"><span class="sb-ic">🚪</span> Esci</div>
+  <div class="sb-foot" id="sb-user-info">v1.5 PWA · Fase 1 di 3</div>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -318,9 +353,41 @@ input[type=checkbox]{width:auto;margin:0}
   <button class="bn-item" id="bn-ruote" onclick="nav('ruote')"><span class="bn-ico">🔵</span>Ruote</button>
   <button class="bn-item" id="bn-gare" onclick="nav('gare')"><span class="bn-ico">🏁</span>Gare</button>
   <button class="bn-item" id="bn-kpi" onclick="nav('kpi')"><span class="bn-ico">📈</span>KPI</button>
+  <button class="bn-item" onclick="doLogout()"><span class="bn-ico">🚪</span>Esci</button>
 </nav>
 
 <!-- ══ MODALS ══ -->
+<!-- MODAL: Utente -->
+<div class="mbg" id="modal-utente">
+  <div class="modal">
+    <div class="mh"><div class="mh-t" id="mu-title">Nuovo Utente</div><button class="mcl" onclick="closeM('modal-utente')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="mu-id">
+      <div class="fr2">
+        <div class="fg"><label>ID Utente *</label><input id="mu-uid" placeholder="es. meccanico1" autocapitalize="none"></div>
+        <div class="fg"><label>Nome visualizzato *</label><input id="mu-nome" placeholder="es. Marco Rossi"></div>
+      </div>
+      <div class="fg"><label>Password *</label><input type="password" id="mu-pwd"></div>
+      <div class="fr2">
+        <div class="fg"><label>Ruolo</label>
+          <select id="mu-ruolo">
+            <option value="utente">👤 Utente</option>
+            <option value="admin">🔑 Admin</option>
+          </select>
+        </div>
+        <div class="fg" style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+          <input type="checkbox" id="mu-attivo" style="width:16px;height:16px;">
+          <label for="mu-attivo" style="font-size:13px;">Utente attivo</label>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bd" id="mu-del" onclick="delMUtente()" style="display:none">🗑 Elimina</button>
+      <button class="btn bs" onclick="closeM('modal-utente')">Annulla</button>
+      <button class="btn bp" onclick="saveMUtente()">💾 Salva</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL: Atleta -->
 <div class="mbg" id="modal-atl">
   <div class="modal">
@@ -501,8 +568,15 @@ input[type=checkbox]{width:auto;margin:0}
     <div class="mh"><div class="mh-t" id="mr-title">Coppia Ruote</div><button class="mcl" onclick="closeM('modal-ruota')">✕</button></div>
     <div class="mb">
       <input type="hidden" id="mr-id">
-      <div class="fr2">
+      <div class="fr3">
         <div class="fg"><label>Nome coppia</label><input id="mr-nome" placeholder="es. Coppia 1"></div>
+        <div class="fg"><label>Utilizzo</label>
+          <select id="mr-tipo">
+            <option value="entrambi">🔄 Gara & Allenamento</option>
+            <option value="gara">🏁 Solo Gara</option>
+            <option value="allenamento">🔧 Solo Allenamento</option>
+          </select>
+        </div>
         <div class="fg"><label>Note</label><input id="mr-note" placeholder="Note generali…"></div>
       </div>
 
@@ -569,6 +643,7 @@ input[type=checkbox]{width:auto;margin:0}
       </div>
     </div>
     <div class="mf">
+      <button class="btn bd" id="mr-del" onclick="delRuota()" style="display:none">🗑 Elimina</button>
       <button class="btn bs" onclick="closeM('modal-ruota')">Annulla</button>
       <button class="btn bp" onclick="saveRuota()">💾 Salva</button>
     </div>
@@ -659,6 +734,36 @@ input[type=checkbox]{width:auto;margin:0}
       <input type="hidden" id="mc-id">
       <div class="fg"><label>Descrizione *</label><input id="mc-desc" placeholder="es. Catena SRAM XX1 Eagle 12v"></div>
       <div class="fr3">
+        <div class="fg"><label>Area *</label>
+          <select id="mc-area" onchange="aggiornaCatComp()">
+            <option value="A">⛓️ A — Trasmissione</option>
+            <option value="B">🛑 B — Freni</option>
+            <option value="C">🔵 C — Ruote</option>
+            <option value="D">🔩 D — Mov. Centrale</option>
+            <option value="E">🔄 E — Sterzo</option>
+            <option value="F">🪑 F — Sella</option>
+            <option value="G">🔧 G — Struttura</option>
+            <option value="H">🧴 H — Consumabili</option>
+            <option value="I">⚡ I — Elettronico</option>
+          </select>
+        </div>
+        <div class="fg"><label>Categoria *</label>
+          <select id="mc-cat" onchange="aggiornaSubcatComp()">
+            <option value="MEC">MEC — Meccanico</option>
+            <option value="IDR">IDR — Idraulico</option>
+            <option value="ELT">ELT — Elettronico</option>
+            <option value="CON">CON — Consumabile</option>
+          </select>
+        </div>
+        <div class="fg"><label>Sottocategoria *</label>
+          <select id="mc-subcat" onchange="aggiornaCodiceComp()"></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:4px">
+        <label>Codice generato</label>
+        <div id="mc-cod-preview" style="font-family:monospace;font-size:13px;font-weight:700;color:#ff6b35;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px 12px;letter-spacing:1px;">—</div>
+      </div>
+      <div class="fr3">
         <div class="fg"><label>Unità di Misura</label>
           <select id="mc-um">
             <option value="pz">pz</option>
@@ -712,8 +817,10 @@ function statoBadge(s){const st=STATI_GARA[s]||STATI_GARA.provvisorio;return`<sp
 function genCodice(area,cat,sub){if(!area||!cat||!sub)return'';const pfx=`${area}-${cat}-${sub}`;const nums=D.catalogo.filter(c=>c.codice&&c.codice.startsWith(pfx+'-')).map(c=>parseInt(c.codice.split('-').pop())||0);return`${pfx}-${String(nums.length?Math.max(...nums)+1:1).padStart(3,'0')}`;}
 
 const SK='cx_v5'; let D={}, qmSelId='', qmTipo='uscita', selAtl='', selBici='', selGara='';
+let currentUser=null;
 const DEF={
   stagione:'2026-2027', budgetTot:5000,
+  users:[{id:'admin',nome:'Admin',pwd:'cx2026',ruolo:'admin'}],
   budgetCat:{'Trasmissione':1200,'Freni':600,'Cerchi & Ruote':1500,'Consumabili':800,'Sterzo & Sella':400,'Varie':500},
   catalogo:[
     {id:'C001',codice:'A-MEC-CAT-001',codArea:'A',codCat:'MEC',codSubcat:'CAT',desc:'Catena SRAM XX1 Eagle 12v',um:'pz',costo:42,giac:8,smin:3,stato:'attivo',stagione:'2026-2027',fornitore:'Probike SRL',leadtime:5,posizione:'A-1',rif:'',noteComp:'',prezzoStorico:[{data:'2026-09-01',v:42}]},
@@ -817,8 +924,12 @@ const DEF={
   ],
 };
 
-function migrateData(){// Migrazione: se ruote manca o non ha struttura ant/pst, re-inizializza da DEF
-if(!D.ruote||!D.ruote.length||!D.ruote[0].ant){D.ruote=JSON.parse(JSON.stringify(DEF.ruote));return true;}return false;}
+function migrateData(){let changed=false;
+// Migrazione: se ruote manca o non ha struttura ant/pst, re-inizializza da DEF
+if(!D.ruote||!D.ruote.length||!D.ruote[0].ant){D.ruote=JSON.parse(JSON.stringify(DEF.ruote));changed=true;}
+// Migrazione: aggiunge users se mancante (primo accesso post-aggiornamento)
+if(!D.users||!D.users.length){D.users=JSON.parse(JSON.stringify(DEF.users));changed=true;}
+return changed;}
 function load(){const s=localStorage.getItem(SK);if(s){try{D=JSON.parse(s);if(migrateData())save();}catch(e){D=JSON.parse(JSON.stringify(DEF));}}else{D=JSON.parse(JSON.stringify(DEF));save();}}
 function save(){localStorage.setItem(SK,JSON.stringify(D));saveToCloud();}
 function gid(p){return p+Date.now().toString(36).toUpperCase().slice(-6);}
@@ -841,7 +952,7 @@ function catBadge(cat){if(!cat)return'<span class="b bgy">— da definire</span>
 let page='dash',tabs={};
 function nav(p){page=p;if(!tabs[p])tabs[p]=0;document.querySelectorAll('.sb-it').forEach(el=>el.classList.toggle('act',el.getAttribute('onclick')==="nav('"+p+"')"));document.querySelectorAll('.bn-item').forEach(el=>el.classList.toggle('act',el.id==='bn-'+p));render();}
 function setTab(p,i){tabs[p]=i;render();}
-function render(){const info={dash:['Dashboard','Riepilogo stagione'],mag:['Magazzino','Catalogo · Movimenti · Reintegro · Statistiche'],atl:['Atleti & Biciclette','Anagrafica · Manutenzioni · Analisi'],ruote:['Ruote','12 coppie · Stagione 2026/27'],gare:['Gare & Calendario','Stagione 2026–2027 · 42 eventi'],kpi:['KPI & Usura','Costi · Zone bici · Indici usura']};const[t,s]=info[page]||['',''];document.getElementById('pg-title').textContent=t;document.getElementById('pg-sub').textContent=s;if(page==='ruote'){rRuote();bindAll();return;}const fns={dash:rDash,mag:rMag,atl:rAtl,gare:rGare,kpi:rKpi};document.getElementById('content').innerHTML=(fns[page]||rDash)();bindAll();}
+function render(){const info={dash:['Dashboard','Riepilogo stagione'],mag:['Magazzino','Catalogo · Movimenti · Reintegro · Statistiche'],atl:['Atleti & Biciclette','Anagrafica · Manutenzioni · Analisi'],ruote:['Ruote','12 coppie · Stagione 2026/27'],gare:['Gare & Calendario','Stagione 2026–2027 · 42 eventi'],kpi:['KPI & Usura','Costi · Zone bici · Indici usura'],utenti:['Gestione Utenti','Accessi e permessi']};const[t,s]=info[page]||['',''];document.getElementById('pg-title').textContent=t;document.getElementById('pg-sub').textContent=s;if(page==='ruote'){rRuote();bindAll();return;}const fns={dash:rDash,mag:rMag,atl:rAtl,gare:rGare,kpi:rKpi,utenti:rUtenti};document.getElementById('content').innerHTML=(fns[page]||rDash)();bindAll();}
 function bindAll(){document.querySelectorAll('.mbg').forEach(el=>{el.onclick=e=>{if(e.target===el)el.classList.remove('open');};});}
 
 function spesaTot(){return D.movimenti.filter(m=>m.tipo==='ingresso').reduce((a,m)=>{const cp=comp(m.cid);return a+(cp?cp.costo*m.qty:0);},0);}
@@ -981,9 +1092,42 @@ function openMComp(cid){
   document.getElementById('mc-pos').value=c.posizione||'A-1';
   document.getElementById('mc-stato').value=c.stato||'attivo';
   document.getElementById('mc-note').value=c.noteComp||'';
+  // Imposta area/categoria/sottocategoria e aggiorna il codice
+  const area=c.codArea||'A';
+  const cat=c.codCat||'MEC';
+  const sub=c.codSubcat||'';
+  document.getElementById('mc-area').value=area;
+  document.getElementById('mc-cat').value=cat;
+  // Popola sottocategorie per la categoria selezionata
+  const subs=SUBCATS[cat]||{};
+  document.getElementById('mc-subcat').innerHTML=Object.entries(subs).map(([k,v])=>`<option value="${k}">${k} — ${v}</option>`).join('');
+  if(sub)document.getElementById('mc-subcat').value=sub;
+  // Mostra codice esistente o genera anteprima
+  const preview=document.getElementById('mc-cod-preview');
+  if(!isNew&&c.codice){preview.textContent=c.codice;preview.style.color='#16a34a';}
+  else{preview.textContent=genCodice(area,cat,document.getElementById('mc-subcat').value)||'—';preview.style.color='#ff6b35';}
   document.getElementById('mc-title').textContent=isNew?'Nuovo Componente':'Modifica Componente';
   document.getElementById('mc-del').style.display=isNew?'none':'inline-block';
   document.getElementById('modal-comp').classList.add('open');
+}
+
+function aggiornaCatComp(){aggiornaSubcatComp();}
+function aggiornaSubcatComp(){
+  const cat=document.getElementById('mc-cat')?.value||'MEC';
+  const subs=SUBCATS[cat]||{};
+  const sel=document.getElementById('mc-subcat');
+  sel.innerHTML=Object.entries(subs).map(([k,v])=>`<option value="${k}">${k} — ${v}</option>`).join('');
+  aggiornaCodiceComp();
+}
+function aggiornaCodiceComp(){
+  const a=document.getElementById('mc-area')?.value||'A';
+  const c=document.getElementById('mc-cat')?.value||'MEC';
+  const s=document.getElementById('mc-subcat')?.value||'';
+  const id=document.getElementById('mc-id')?.value||'';
+  const existing=comp(id);
+  const preview=document.getElementById('mc-cod-preview');
+  if(existing&&existing.codice){preview.textContent=existing.codice;preview.style.color='#16a34a';}
+  else{const cod=genCodice(a,c,s);preview.textContent=cod||'—';preview.style.color='#ff6b35';}
 }
 
 function rCat(){
@@ -1292,7 +1436,8 @@ function rDashGara(gid2){
   ${inPart&&bs.length?`<div style="margin-top:6px;padding-left:24px;">
     <label style="font-size:12px;">Bici: <select onchange="setBiciPart('${g.id}','${a.id}',this.value)">
       <option value="">—</option>
-      ${bs.map(b=>`<option value="${b.id}" ${pEntry.bid===b.id?'selected':''}>${b.marca} ${b.mod} (${b.num})</option>`).join('')}
+      ${bs.length>=2?`<option value="entrambe" ${pEntry.bid==='entrambe'?'selected':''}>🚲🚲 Entrambe</option>`:''}
+      ${bs.map(b=>`<option value="${b.id}" ${pEntry.bid===b.id?'selected':''}>${b.marca} ${b.mod} (Bici ${b.num})</option>`).join('')}
     </select></label>
     <label style="font-size:12px;margin-left:8px;">Pos: <input type="number" min="1" max="99" style="width:50px" value="${pEntry.pos||''}" onchange="setPosGara('${g.id}','${a.id}',this.value)" placeholder="—"></label>
     <label style="font-size:12px;margin-left:8px;">Note: <input type="text" style="width:120px" value="${esc(pEntry.note||'')}" onchange="setNotePartGara('${g.id}','${a.id}',this.value)" placeholder="—"></label>
@@ -1443,7 +1588,10 @@ function delAtl(){
 function initBici(id,aid){
   const b=id?bik(id):{id:gid('B'),aid:aid||selAtl,num:1,marca:'',mod:'',anno:new Date().getFullYear(),sn:'',taglia:'',km:0,gruppo:'',ruoteAll:'',ruoteGara:'',note:''};
   document.getElementById('bc-id').value=b.id;
-  document.getElementById('bc-aid').value=b.aid;
+  // Popola la select atleti prima di impostare il valore
+  const aidSel=document.getElementById('bc-aid');
+  aidSel.innerHTML=D.atleti.map(a=>`<option value="${a.id}">${fn(a)}</option>`).join('');
+  aidSel.value=b.aid;
   document.getElementById('bc-num').value=b.num;
   document.getElementById('bc-marca').value=b.marca;
   document.getElementById('bc-mod').value=b.mod;
@@ -1666,6 +1814,7 @@ function rRuoteGrid(){
       <td>${compCell(ant.disco)}</td>
       <td><span style="color:#d1d5db;font-size:11px">—</span></td>
       <td><span style="color:#d1d5db;font-size:11px">—</span></td>
+      <td rowspan="2" style="vertical-align:middle;font-size:11px">${r.tipo==='gara'?'<span class="b br">🏁 Gara</span>':r.tipo==='allenamento'?'<span class="b bb">🔧 Allena.</span>':'<span class="b bgy">🔄 Entrambi</span>'}</td>
       <td rowspan="2" style="vertical-align:middle;font-size:12px">${atlLabel}</td>
       <td rowspan="2" style="vertical-align:middle;font-size:12px">${pneuLabel}</td>
       <td rowspan="2" style="vertical-align:middle"><button class="btn-ico" onclick="initRuota('${r.id}')" title="Modifica">✏️</button></td>
@@ -1679,7 +1828,10 @@ function rRuoteGrid(){
       <td>${compCell(pst.corone)}</td>
     </tr>`;
   });
-  return`<div class="tw"><table>
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <button class="btn btn-p" onclick="initRuota('')">➕ Nuova Coppia</button>
+</div>
+<div class="tw"><table>
   <thead><tr>
     <th style="width:52px;text-align:center">Coppia</th>
     <th style="width:40px"></th>
@@ -1688,6 +1840,7 @@ function rRuoteGrid(){
     <th>Disco</th>
     <th>Movimenti</th>
     <th>Cassetta</th>
+    <th>Utilizzo</th>
     <th>👤 Atleta</th>
     <th>🏷️ Ultimo pneu</th>
     <th></th>
@@ -1749,12 +1902,17 @@ function rRuoteAss(){
 }
 
 function initRuota(id){
-  const r=(D.ruote||[]).find(x=>x.id===id)||{id,note:'',ant:{marca:'',modello:'',cuscinetti:{},disco:{}},pst:{marca:'',modello:'',cuscinetti:{},movimenti:{},disco:{},corone:{}}};
+  // Genera nuovo ID se non specificato
+  const newId=id||('R'+String((D.ruote||[]).length+1).padStart(2,'0'));
+  const isNew=!id;
+  const r=(D.ruote||[]).find(x=>x.id===id)||{id:newId,nome:'',tipo:'entrambi',note:'',ant:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''}},pst:{marca:'',modello:'',cuscinetti:{marca:'',spec:'',codMag:''},movimenti:{marca:'',spec:'',codMag:''},disco:{marca:'',spec:'',codMag:''},corone:{marca:'',spec:'',codMag:''}}};
   const ant=r.ant||{};const pst=r.pst||{};
   document.getElementById('mr-id').value=r.id;
   document.getElementById('mr-nome').value=r.nome||'';
+  document.getElementById('mr-tipo').value=r.tipo||'entrambi';
   document.getElementById('mr-note').value=r.note||'';
-  document.getElementById('mr-title').textContent=(r.nome||r.id)+' — '+r.id;
+  document.getElementById('mr-del').style.display=isNew?'none':'inline-block';
+  document.getElementById('mr-title').textContent=isNew?'Nuova Coppia Ruote':(r.nome||r.id)+' — '+r.id;
   // ANT
   document.getElementById('mr-ant-marca').value=ant.marca||'';
   document.getElementById('mr-ant-modello').value=ant.modello||'';
@@ -1771,12 +1929,15 @@ function initRuota(id){
 }
 
 function saveRuota(){
+  if(!D.ruote)D.ruote=[];
   const id=document.getElementById('mr-id').value;
-  const idx=(D.ruote||[]).findIndex(x=>x.id===id);if(idx===-1)return;
-  const r=D.ruote[idx];
-  D.ruote[idx]={
+  const idx=D.ruote.findIndex(x=>x.id===id);
+  const isNew=idx===-1;
+  const r=isNew?{}:D.ruote[idx];
+  const updated={
     id,
     nome:document.getElementById('mr-nome').value.trim()||r.nome||id,
+    tipo:document.getElementById('mr-tipo').value||'entrambi',
     note:document.getElementById('mr-note').value.trim(),
     ant:{
       marca:document.getElementById('mr-ant-marca').value.trim(),
@@ -1793,6 +1954,16 @@ function saveRuota(){
       corone:{marca:document.getElementById('mr-pst-cor-marca').value.trim(),spec:document.getElementById('mr-pst-cor-spec').value.trim(),codMag:document.getElementById('mr-pst-cor-cod').value.trim()},
     },
   };
+  if(isNew)D.ruote.push(updated);else D.ruote[idx]=updated;
+  save();closeM('modal-ruota');render();
+}
+
+function delRuota(){
+  const id=document.getElementById('mr-id').value;
+  if(!confirm('Eliminare questa coppia ruote?\nI dati di pneumatici e assegnazioni collegati verranno rimossi.'))return;
+  D.ruote=(D.ruote||[]).filter(x=>x.id!==id);
+  D.storicoPneumatici=(D.storicoPneumatici||[]).filter(x=>x.ruotaId!==id);
+  D.assegnazioniRuote=(D.assegnazioniRuote||[]).filter(x=>x.ruotaId!==id);
   save();closeM('modal-ruota');render();
 }
 
@@ -1960,8 +2131,13 @@ async function loadFromCloud(){
 function saveMComp(){
   const id=document.getElementById('mc-id')?.value;
   const idx=D.catalogo.findIndex(x=>x.id===id);
-  const obj=idx>=0?{...D.catalogo[idx]}:{id,codice:'',codArea:'',codCat:'',codSubcat:'',prezzoStorico:[]};
+  const isNew=idx<0;
+  const area=document.getElementById('mc-area')?.value||'A';
+  const cat=document.getElementById('mc-cat')?.value||'MEC';
+  const sub=document.getElementById('mc-subcat')?.value||'';
+  const obj=isNew?{id,codice:'',codArea:area,codCat:cat,codSubcat:sub,prezzoStorico:[]}:{...D.catalogo[idx]};
   obj.desc=document.getElementById('mc-desc')?.value.trim()||'';
+  if(!obj.desc){alert('Inserisci una descrizione');return;}
   obj.um=document.getElementById('mc-um')?.value||'pz';
   const nuovoCosto=+document.getElementById('mc-costo')?.value||0;
   if(nuovoCosto!==obj.costo){obj.prezzoStorico=[...(obj.prezzoStorico||[]),{data:tod(),v:nuovoCosto}];}
@@ -1973,6 +2149,11 @@ function saveMComp(){
   obj.posizione=document.getElementById('mc-pos')?.value||'A-1';
   obj.stato=document.getElementById('mc-stato')?.value||'attivo';
   obj.noteComp=document.getElementById('mc-note')?.value||'';
+  // Per articoli nuovi genera il codice; per quelli esistenti lo mantiene
+  if(isNew){
+    obj.codArea=area;obj.codCat=cat;obj.codSubcat=sub;
+    obj.codice=genCodice(area,cat,sub);
+  }
   if(idx>=0)D.catalogo[idx]=obj;else D.catalogo.push(obj);
   save();closeM('modal-comp');render();
 }
@@ -2167,7 +2348,134 @@ ${body}
   setTimeout(()=>w.print(),700);
 }
 
-load();nav('dash');
+// ── AUTH ──
+function initAuth(){
+  const stored=sessionStorage.getItem('cx_auth');
+  if(stored){try{currentUser=JSON.parse(stored);}catch(e){currentUser=null;}}
+  if(currentUser&&getUser(currentUser.id)){
+    showApp();
+  } else {
+    currentUser=null;
+    sessionStorage.removeItem('cx_auth');
+    showLogin();
+  }
+}
+function getUser(id){
+  const users=D.users||[];
+  return users.find(u=>u.id===id)||null;
+}
+function showLogin(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  setTimeout(()=>document.getElementById('login-id').focus(),100);
+}
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  // Mostra voce Utenti solo agli admin
+  const isAdmin=currentUser&&currentUser.ruolo==='admin';
+  document.getElementById('sb-utenti').style.display=isAdmin?'flex':'none';
+  // Aggiorna footer sidebar con nome utente
+  const foot=document.getElementById('sb-user-info');
+  if(foot&&currentUser)foot.textContent=`👤 ${currentUser.nome} · v1.5`;
+  nav('dash');
+}
+function doLogin(){
+  const id=document.getElementById('login-id').value.trim();
+  const pwd=document.getElementById('login-pwd').value;
+  const err=document.getElementById('login-err');
+  err.style.display='none';
+  const users=D.users||[];
+  const user=users.find(u=>u.id===id&&u.pwd===pwd&&u.attivo!==false);
+  if(user){
+    currentUser={id:user.id,nome:user.nome,ruolo:user.ruolo};
+    sessionStorage.setItem('cx_auth',JSON.stringify(currentUser));
+    document.getElementById('login-pwd').value='';
+    showApp();
+  } else {
+    err.style.display='block';
+    document.getElementById('login-pwd').value='';
+    document.getElementById('login-pwd').focus();
+  }
+}
+function doLogout(){
+  if(!confirm('Vuoi uscire dall\'applicazione?'))return;
+  currentUser=null;
+  sessionStorage.removeItem('cx_auth');
+  document.getElementById('login-id').value='';
+  showLogin();
+}
+
+// ── GESTIONE UTENTI (solo admin) ──
+function rUtenti(){
+  if(!currentUser||currentUser.ruolo!=='admin')return'<p class="empty">⛔ Accesso non autorizzato</p>';
+  const users=D.users||[];
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <button class="btn btn-p" onclick="openMUtente('')">➕ Nuovo Utente</button>
+</div>
+<div class="table-wrap"><table class="tbl">
+<thead><tr><th>ID</th><th>Nome</th><th>Ruolo</th><th>Stato</th><th></th></tr></thead>
+<tbody>${users.map(u=>`<tr>
+  <td><code style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px;">${esc(u.id)}</code></td>
+  <td><strong>${esc(u.nome)}</strong></td>
+  <td><span class="b ${u.ruolo==='admin'?'bo':'bb'}">${esc(u.ruolo)}</span></td>
+  <td><span class="b ${u.attivo===false?'bgy':'bg'}">${u.attivo===false?'Disabilitato':'Attivo'}</span></td>
+  <td>${u.id===currentUser.id?'<span style="font-size:11px;color:#7a8ba0">tu</span>':`<button class="btn-ico" onclick="openMUtente('${u.id}')">✏️</button>`}</td>
+</tr>`).join('')}
+</tbody></table></div>`;
+}
+
+let editUtenteId='';
+function openMUtente(uid){
+  editUtenteId=uid;
+  const users=D.users||[];
+  const u=uid?users.find(x=>x.id===uid):null;
+  document.getElementById('mu-title').textContent=uid?'Modifica Utente':'Nuovo Utente';
+  document.getElementById('mu-id').value=uid;
+  document.getElementById('mu-uid').value=u?u.id:'';
+  document.getElementById('mu-uid').disabled=!!uid;
+  document.getElementById('mu-nome').value=u?u.nome:'';
+  document.getElementById('mu-pwd').value='';
+  document.getElementById('mu-pwd').placeholder=uid?'Lascia vuoto per non cambiare':'Scegli una password';
+  document.getElementById('mu-ruolo').value=u?u.ruolo:'utente';
+  document.getElementById('mu-attivo').checked=u?u.attivo!==false:true;
+  document.getElementById('mu-del').style.display=uid&&uid!==currentUser.id?'inline-block':'none';
+  openM('modal-utente');
+}
+function saveMUtente(){
+  const uid=document.getElementById('mu-id').value;
+  const newId=document.getElementById('mu-uid').value.trim().toLowerCase().replace(/\s+/g,'-');
+  const nome=document.getElementById('mu-nome').value.trim();
+  const pwd=document.getElementById('mu-pwd').value;
+  const ruolo=document.getElementById('mu-ruolo').value;
+  const attivo=document.getElementById('mu-attivo').checked;
+  if(!newId||!nome){alert('ID e Nome sono obbligatori');return;}
+  if(!uid&&!pwd){alert('La password è obbligatoria per i nuovi utenti');return;}
+  if(!D.users)D.users=[];
+  if(uid){
+    const idx=D.users.findIndex(u=>u.id===uid);
+    if(idx>=0){
+      D.users[idx].nome=nome;
+      D.users[idx].ruolo=ruolo;
+      D.users[idx].attivo=attivo;
+      if(pwd)D.users[idx].pwd=pwd;
+    }
+  } else {
+    if(D.users.find(u=>u.id===newId)){alert('ID già in uso, scegline un altro');return;}
+    D.users.push({id:newId,nome,pwd,ruolo,attivo});
+  }
+  save();closeM('modal-utente');render();
+}
+function delMUtente(){
+  const uid=document.getElementById('mu-id').value;
+  if(!uid||uid===currentUser.id)return;
+  if(!confirm('Eliminare questo utente?'))return;
+  D.users=(D.users||[]).filter(u=>u.id!==uid);
+  save();closeM('modal-utente');render();
+}
+
+load();initAuth();
 </script>
+</div><!-- #app -->
 </body>
 </html>
