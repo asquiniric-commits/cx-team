@@ -298,6 +298,13 @@ input[type=checkbox]{width:auto;margin:0}
     </div>
     <button class="login-btn" onclick="doLogin()">🔐 Accedi</button>
     <div class="login-err" id="login-err">ID o password non validi</div>
+    <div style="margin-top:18px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;text-align:center">
+      <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px">Primo accesso su questo dispositivo?</div>
+      <label style="cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);border-radius:7px;padding:8px 14px;font-size:13px;display:inline-block;width:100%;box-sizing:border-box;text-align:center">
+        📥 Importa dati dal file JSON
+        <input type="file" accept=".json" id="login-import-file" style="display:none" onchange="loginImportJSON(this)">
+      </label>
+    </div>
   </div>
 </div>
 
