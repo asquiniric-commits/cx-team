@@ -264,6 +264,7 @@ input[type=checkbox]{width:auto;margin:0}
   #topbar .btn span{display:none}
 }
 .btn.bd{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.btn.act{outline:2px solid #ff6b35;outline-offset:1px;font-weight:700}
 .btn.bd:hover{background:#fecaca}
 /* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;background:#0f1722;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0}
@@ -801,6 +802,46 @@ input[type=checkbox]{width:auto;margin:0}
     </div>
   </div>
 </div>
+<!-- MODAL: Movimento Rapido -->
+<div class="mbg" id="modal-qm">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mh-t" id="qm-title">⚡ Movimento Rapido</div><button class="mcl" onclick="closeM('modal-qm')">✕</button></div>
+    <div class="mb">
+      <div style="margin-bottom:10px"><input class="search-in" placeholder="🔍 Cerca componente..." oninput="qmSearch(this.value)" style="width:100%;box-sizing:border-box"></div>
+      <div id="qm-list" style="max-height:180px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px;background:#fafafa;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="qm-tipo-usc" class="btn bp act" onclick="setQmTipo('uscita')" style="flex:1">📤 Uscita</button>
+        <button id="qm-tipo-ing" class="btn bs" onclick="setQmTipo('ingresso')" style="flex:1">📥 Ingresso</button>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Quantità</label><input type="number" id="qm-qty" min="1" value="1"></div>
+        <div class="fg"><label>Causale</label>
+          <select id="qm-caus" onchange="toggleQmCustom(this.value)">
+            <option value="Utilizzo gara">🏁 Utilizzo gara</option>
+            <option value="Utilizzo allenamento">🚴 Utilizzo allenamento</option>
+            <option value="Consumo ordinario">🔄 Consumo ordinario</option>
+            <option value="Acquisto">📦 Acquisto</option>
+            <option value="Reso/Restituzione">↩️ Reso/Restituzione</option>
+            <option value="Rettifica inventario">📋 Rettifica inventario</option>
+            <option value="custom">✏️ Altra causale...</option>
+          </select>
+        </div>
+      </div>
+      <div id="qm-custom-caus" class="fg" style="display:none">
+        <label>Causale personalizzata</label>
+        <input id="qm-custom-text" placeholder="Descrivi la causale...">
+      </div>
+      <div id="qm-atl-f" class="fg">
+        <label>Atleta (opzionale)</label>
+        <select id="qm-atl"><option value="">— Nessuno —</option></select>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('modal-qm')">Annulla</button>
+      <button class="btn bp" onclick="saveQmMov()">💾 Registra Movimento</button>
+    </div>
+  </div>
+</div>
 <script>
 const AREE={A:{nome:'Trasmissione',emoji:'⛓️'},B:{nome:'Freni',emoji:'🛑'},C:{nome:'Ruote',emoji:'🔵'},D:{nome:'Mov. Centrale',emoji:'🔩'},E:{nome:'Sterzo',emoji:'🔄'},F:{nome:'Sella',emoji:'🪑'},G:{nome:'Struttura',emoji:'🔧'},H:{nome:'Consumabili',emoji:'🧴'},I:{nome:'Elettronico',emoji:'⚡'}};
 const SLOTS={'A-1':'Catene','A-2':'Cassette & corone','A-3':'Deragliatori post.','A-4':'Deragliatori ant. & leve','A-5':'Pedivelle & guarnitura','B-1':'Pastiglie freno','B-2':'Dischi / Rotori','B-3':'Cavi freno','B-4':'Guaine','B-5':'Leve freno','B-6':'Comp. idraulici','C-1':'Tubolari','C-2':'Valvole & acc. ruota','C-3':'Raggi & nippli','C-4':'Mozzi','D-1':'Cuscinetti BB','D-2':'Calotte & acc. BB','E-1':'Cuffie sterzo','E-2':'Manubrio & attacco','E-3':'Morsetti & acc. sterzo','F-1':'Selle','F-2':'Reggisella & fascette','G-1':'Viteria strutturale','G-2':'Perni & passanti','G-3':'Accessori telaio','H-1':'Lubrificanti catena','H-2':'Grassi & anti-seize','H-3':'Detergenti','H-4':'Nastri & sigillanti','H-5':'Kit pulizia','I-1':'Batterie','I-2':'Caricatori & cavi','I-3':'Sensori','I-4':'Computer / Head unit','I-5':'Moduli & junction'};
@@ -1061,7 +1102,27 @@ function saveNewComp(){
   D.catalogo.push(nc);save();setTab('mag',0);
 }
 
-function showQMode(cid){qmSelId=cid;qmTipo='uscita';document.getElementById('qm-tipo-usc').classList.add('act');document.getElementById('qm-tipo-ing').classList.remove('act');const c=comp(cid);document.getElementById('qm-title').textContent=c?c.desc:'Movimento rapido';document.getElementById('qm-qty').value=1;document.getElementById('qm-caus').value='';document.getElementById('qm-atl-f').style.display='block';document.getElementById('qm-custom-caus').style.display='none';document.getElementById('modal-qm').classList.add('open');}
+function showQMode(cid){
+  qmSelId=cid||'';qmTipo='uscita';
+  // Popola lista componenti
+  const cats=(D.catalogo||[]).filter(c=>c.stato!=='archiviato');
+  const listEl=document.getElementById('qm-list');
+  if(listEl){listEl.innerHTML=cats.length?cats.map(c=>`<div class="qm-row${qmSelId===c.id?' sel':''}" data-cid="${c.id}" data-desc="${(c.desc||'').replace(/"/g,'&quot;')}" onclick="qmSelect('${c.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;${qmSelId===c.id?'background:#fff7ed;':''}"><span>${esc(c.desc)}</span><span style="font-size:11px;color:#888">${c.giac||0} ${c.um||'pz'}</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:#888">Nessun componente in catalogo</div>';}
+  // Popola atleti
+  const atlEl=document.getElementById('qm-atl');
+  if(atlEl){atlEl.innerHTML='<option value="">— Nessuno —</option>'+(D.atleti||[]).map(a=>`<option value="${a.id}">${a.nome||''} ${a.cogn||''}</option>`).join('');}
+  // Tipo buttons
+  document.getElementById('qm-tipo-usc').classList.add('act');
+  document.getElementById('qm-tipo-ing').classList.remove('act');
+  // Titolo
+  const c=comp(cid);
+  document.getElementById('qm-title').textContent=c?`⚡ ${c.desc}`:'⚡ Movimento Rapido';
+  document.getElementById('qm-qty').value=1;
+  document.getElementById('qm-caus').value='Utilizzo gara';
+  document.getElementById('qm-atl-f').style.display='block';
+  document.getElementById('qm-custom-caus').style.display='none';
+  document.getElementById('modal-qm').classList.add('open');
+}
 function qmSearch(v){const q=v.toLowerCase();document.querySelectorAll('.qm-row').forEach(r=>{r.style.display=r.dataset.desc?.toLowerCase().includes(q)?'':'none';});}
 function qmSelect(cid){document.querySelectorAll('.qm-row').forEach(r=>r.classList.toggle('sel',r.dataset.cid===cid));qmSelId=cid;const c=comp(cid);if(c)document.getElementById('qm-title').textContent=c.desc;}
 function qmClear(){qmSelId='';document.querySelectorAll('.qm-row').forEach(r=>r.classList.remove('sel'));}
@@ -2135,7 +2196,7 @@ function saveMComp(){
   const area=document.getElementById('mc-area')?.value||'A';
   const cat=document.getElementById('mc-cat')?.value||'MEC';
   const sub=document.getElementById('mc-subcat')?.value||'';
-  const obj=isNew?{id,codice:'',codArea:area,codCat:cat,codSubcat:sub,prezzoStorico:[]}:{...D.catalogo[idx]};
+  const obj=isNew?{id,codice:'',codArea:area,codCat:cat,codSubcat:sub,stagione:D.stagione||'',rif:'',prezzoStorico:[]}:{...D.catalogo[idx]};
   obj.desc=document.getElementById('mc-desc')?.value.trim()||'';
   if(!obj.desc){alert('Inserisci una descrizione');return;}
   obj.um=document.getElementById('mc-um')?.value||'pz';
@@ -2155,7 +2216,7 @@ function saveMComp(){
     obj.codice=genCodice(area,cat,sub);
   }
   if(idx>=0)D.catalogo[idx]=obj;else D.catalogo.push(obj);
-  save();closeM('modal-comp');render();
+  save();closeM('modal-comp');setTab('mag',0);
 }
 function delMComp(){
   const id=document.getElementById('mc-id')?.value;
