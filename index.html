@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>CX Team Manager</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- Google Sign-In rimosso: sync ora usa Codice Squadra (jsonblob) -->
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
@@ -67,6 +67,7 @@ body{background:#f0f2f5;display:flex;height:100vh;overflow:hidden;color:#1e2a3a}
 #sync-btn.synced{background:#dcfce7;color:#16a34a}
 #sync-btn.error{background:#fee2e2;color:#dc2626}
 #sync-btn.signedin{background:rgba(255,107,53,.1);color:#ff6b35}
+#sync-btn.active{background:#dcfce7;color:#16a34a}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
 /* ── BOTTOM NAV (MOBILE) ── */
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:white;border-top:1px solid #e4e9ef;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:200;padding-bottom:env(safe-area-inset-bottom)}
@@ -300,7 +301,7 @@ input[type=checkbox]{width:auto;margin:0}
     <div class="login-err" id="login-err">ID o password non validi</div>
     <div style="margin-top:18px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;text-align:center">
       <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px">Primo accesso su questo dispositivo?</div>
-      <label style="cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);border-radius:7px;padding:8px 14px;font-size:13px;display:inline-block;width:100%;box-sizing:border-box;text-align:center">
+      <label id="login-import-label" style="cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);border-radius:7px;padding:8px 14px;font-size:13px;display:inline-block;width:100%;box-sizing:border-box;text-align:center">
         📥 Importa dati dal file JSON
         <input type="file" accept=".json" id="login-import-file" style="display:none" onchange="loginImportJSON(this)">
       </label>
@@ -344,7 +345,7 @@ input[type=checkbox]{width:auto;margin:0}
     <div class="tb-right">
       <button id="sync-btn" onclick="driveClick()">
         <span class="sync-dot"></span>
-        <span id="sync-label">Google Drive</span>
+        <span id="sync-label">Sync Squadra</span>
       </button>
       <button class="btn bs sm" onclick="exportJSON()">⬇ Export</button><button class="btn bs sm" onclick="importJSON()">⬆ Importa</button>
       <span class="season-pill">🏁 2026–2027</span>
@@ -375,7 +376,7 @@ input[type=checkbox]{width:auto;margin:0}
         <div class="fg"><label>ID Utente *</label><input id="mu-uid" placeholder="es. meccanico1" autocapitalize="none"></div>
         <div class="fg"><label>Nome visualizzato *</label><input id="mu-nome" placeholder="es. Marco Rossi"></div>
       </div>
-      <div class="fg"><label>Password *</label><input type="password" id="mu-pwd"></div>
+      <div class="fg"><label>Password *</label><input type="password" id="mu-pwd" autocomplete="new-password"></div>
       <div class="fr2">
         <div class="fg"><label>Ruolo</label>
           <select id="mu-ruolo">
@@ -562,9 +563,9 @@ input[type=checkbox]{width:auto;margin:0}
 </div>
 <!-- MODAL: Google Drive Setup -->
 <div class="mbg" id="modal-drive">
-  <div class="modal modal-sm" id="modal-drive">
-    <div class="mh"><div class="mh-t">☁️ Google Drive Sync</div><button class="mcl" onclick="closeM('modal-drive')">✕</button></div>
-    <div class="mb" id="drive-modal-body">
+  <div class="modal modal-sm">
+    <div class="mh"><div class="mh-t">🔗 Sync Squadra</div><button class="mcl" onclick="closeM('modal-drive')">✕</button></div>
+    <div class="mb" id="drive-modal-body" style="line-height:1.7">
       <div id="drive-status-area"></div>
     </div>
     <div class="mf" id="drive-modal-foot"></div>
@@ -979,7 +980,7 @@ if(!D.ruote||!D.ruote.length||!D.ruote[0].ant){D.ruote=JSON.parse(JSON.stringify
 if(!D.users||!D.users.length){D.users=JSON.parse(JSON.stringify(DEF.users));changed=true;}
 return changed;}
 function load(){const s=localStorage.getItem(SK);if(s){try{D=JSON.parse(s);if(migrateData())save();}catch(e){D=JSON.parse(JSON.stringify(DEF));}}else{D=JSON.parse(JSON.stringify(DEF));save();}}
-function save(){localStorage.setItem(SK,JSON.stringify(D));saveToCloud();}
+function save(){D._savedAt=Date.now();localStorage.setItem(SK,JSON.stringify(D));pushToBlob();}
 function gid(p){return p+Date.now().toString(36).toUpperCase().slice(-6);}
 function fd(d){if(!d)return'—';const[y,m,g]=d.split('-');return`${g}/${m}/${y}`;}
 function fdShort(d){if(!d)return'—';const[y,m,g]=d.split('-');return`${g} ${MESI_S[+m]}`;}
@@ -1205,6 +1206,7 @@ function rCat(){
   <button class="btn btn-p" onclick="openMComp('')">➕ Nuovo</button>
   <button class="btn btn-s" onclick="showQMode(null);document.getElementById('modal-qm').classList.add('open')">⚡ Mov. Rapido</button>
   <button class="btn btn-s" onclick="genPDF('catalogo')">📄 PDF</button>
+  <label class="btn btn-s" style="cursor:pointer;margin:0">📥 Importa<input type="file" accept=".json" style="display:none" onchange="importCatalogo(this)"></label>
   <input class="search-in" placeholder="🔍 Cerca..." oninput="filtraCat(this.value)">
 </div>
 ${sott.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ Sotto scorta: ${sott.map(c=>esc(c.desc)).join(', ')}</div>`:''}
@@ -1225,6 +1227,58 @@ ${sott.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ Sotto sc
 }
 function filtraCat(v){const q=v.toLowerCase();document.querySelectorAll('#tbl-cat tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':' none';});}
 function righecat(){}
+
+function importCatalogo(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const arr=Array.isArray(data)?data:(data.catalogo||[]);
+      if(!arr.length){alert('❌ Nessun articolo trovato nel file JSON');return;}
+      const existingRifs=new Set(D.catalogo.map(c=>c.rif).filter(Boolean));
+      const existingIds=new Set(D.catalogo.map(c=>c.id));
+      let aggiunti=0,saltati=0;
+      const now=Date.now().toString(36).toUpperCase();
+      arr.forEach((item,i)=>{
+        if(!item.desc&&!item.id)return;
+        // Deduplication: skip if rif already exists
+        if(item.rif&&existingRifs.has(item.rif)){saltati++;return;}
+        // Ensure unique id
+        let id=item.id||('IMP'+now+String(i).padStart(4,'0'));
+        while(existingIds.has(id))id=id+'_'+i;
+        existingIds.add(id);
+        if(item.rif)existingRifs.add(item.rif);
+        D.catalogo.push({
+          id,
+          codice:item.codice||item.rif||id,
+          codArea:item.codArea||'C',
+          codCat:item.codCat||'MEC',
+          codSubcat:item.codSubcat||'TUB',
+          stagione:item.stagione||D.stagione||'',
+          rif:item.rif||'',
+          prezzoStorico:item.prezzoStorico||[],
+          desc:item.desc||'',
+          um:item.um||'pz',
+          costo:item.costo||0,
+          giac:item.giac||0,
+          smin:item.smin||0,
+          stato:item.stato||'attivo',
+          posizione:item.posizione||'',
+          fornitore:item.fornitore||'',
+          leadtime:item.leadtime||14,
+          noteComp:item.noteComp||''
+        });
+        aggiunti++;
+      });
+      save();
+      render();
+      alert(`✅ Importazione completata!\n\n➕ ${aggiunti} articoli aggiunti\n⏭ ${saltati} già presenti (saltati)`);
+    }catch(e){alert('❌ Errore nel file JSON: '+e.message);}
+    input.value='';
+  };
+  r.readAsText(f);
+}
 
 function rMov(){
   const mvs=[...D.movimenti].sort((a,b)=>b.data>a.data?1:-1).slice(0,50);
@@ -1839,6 +1893,25 @@ function importJSON(){
   inp.click();
 }
 
+function loginImportJSON(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data||typeof data!=='object'||Array.isArray(data)){alert('❌ File JSON non valido');return;}
+      D={...DEF,...data};
+      if(migrateData()){}
+      localStorage.setItem(SK,JSON.stringify(D));
+      // Mostra conferma nella UI
+      const lbl=document.getElementById('login-import-label');
+      if(lbl)lbl.textContent='✅ Dati importati! Ora puoi accedere.';
+      input.value='';
+    }catch(e){alert('❌ Errore nel file JSON: '+e.message);}
+  };
+  r.readAsText(f);
+}
+
 // === RUOTE ===
 const PNEU_TIPO={asciutto:{label:'Asciutto',emoji:'☀️',cls:'tipo-UCI'},medio:{label:'Medio',emoji:'🌤️',cls:'tipo-NAZ'},fango:{label:'Fango',emoji:'🌧️',cls:'tipo-INT'}};
 const CAUSA_SOST={scelta_tecnica:{label:'Scelta tecnica',emoji:'🔧'},usura_minima:{label:'Usura minima',emoji:'🟢'},usura_media:{label:'Usura media',emoji:'🟡'},usura_massima:{label:'Usura massima',emoji:'🔴'},danneggiamento:{label:'Danneggiamento',emoji:'💥'}};
@@ -2123,77 +2196,112 @@ function delAssRuo(id){
   save();render();
 }
 
-// === GOOGLE DRIVE SYNC (v1.5) ===
-function driveClick(){
-  if(gdriveToken){
-    // già connesso: mostra stato e offre sync manuale
-    openM('modal-drive');
-    const body=document.getElementById('drive-modal-body');
-    const foot=document.getElementById('drive-modal-foot');
-    if(body)body.innerHTML='<p>✅ <strong>Drive connesso.</strong></p><p>I dati vengono sincronizzati automaticamente ad ogni salvataggio.</p>';
-    if(foot)foot.innerHTML='<button class="btn bp" onclick="loadFromCloud();closeM(\'modal-drive\')">⬇ Carica da Drive</button><button class="btn bs" onclick="closeM(\'modal-drive\')">Chiudi</button>';
-  }else{
-    initGSI();
-  }
-}
-const GDRIVE_CLIENT_ID='353218973618-7ie63fopjmt8khbc0sgs3b9e47kdt0og.apps.googleusercontent.com';
-const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.appdata';
-const GDRIVE_FILE='cx_team_data.json';
-let gdriveToken=null,gdriveFileId=null;
+// === SYNC SQUADRA (v2.0 — JSONBlob, nessun account richiesto) ===
+const BLOB_BASE='https://jsonblob.com/api/jsonBlob/';
+const SK_BLOB='cx_blob_id';
+let blobSyncId=localStorage.getItem(SK_BLOB)||null;
+let syncPending=false;
 
-function initGSI(){
-  if(!window.google){setSyncState('error');return;}
-  google.accounts.oauth2.initTokenClient({
-    client_id:GDRIVE_CLIENT_ID,
-    scope:GDRIVE_SCOPE,
-    callback:(resp)=>{
-      if(resp.error){setSyncState('error');return;}
-      gdriveToken=resp.access_token;
-      setSyncState('signedin');
-      loadFromCloud();
-    }
-  }).requestAccessToken();
-}
 function setSyncState(state){
   const btn=document.getElementById('sync-btn');
   if(!btn)return;
   btn.className='sync-btn '+state;
-  const labels={default:'☁️ Sync Drive',syncing:'⏳ Sincronizzazione…',synced:'✅ Sincronizzato',error:'❌ Errore',signedin:'✅ Drive Connesso'};
-  btn.textContent=labels[state]||'☁️ Sync Drive';
+  const labels={default:'🔗 Sync Squadra',syncing:'⏳ Sinc…',synced:'✅ Sincronizzato',error:'⚠️ Errore sync',active:'🟢 Squadra Attiva'};
+  document.getElementById('sync-label').textContent=labels[state]||'🔗 Sync Squadra';
 }
-async function saveToCloud(){
-  if(!gdriveToken)return;
-  setSyncState('syncing');
-  const body=JSON.stringify(D);
+
+async function pushToBlob(){
+  if(!blobSyncId)return;
+  D._savedAt=Date.now();
+  localStorage.setItem(SK,JSON.stringify(D));
   try{
-    if(gdriveFileId){
-      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,{method:'PATCH',headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},body});
-    }else{
-      const meta=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name+%3D+%27cx_team_data.json%27',{headers:{'Authorization':'Bearer '+gdriveToken}}).then(r=>r.json());
-      if(meta.files&&meta.files.length){
-        gdriveFileId=meta.files[0].id;
-        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,{method:'PATCH',headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},body});
-      }else{
-        const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'multipart/related; boundary=boundary'},body:'--boundary\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({name:GDRIVE_FILE,parents:['appDataFolder']})+'\r\n--boundary\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--boundary--'}).then(r=>r.json());
-        gdriveFileId=res.id;
-      }
-    }
+    await fetch(BLOB_BASE+blobSyncId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)});
     setSyncState('synced');
   }catch(e){setSyncState('error');}
 }
-async function loadFromCloud(){
-  if(!gdriveToken)return;
+
+async function pullFromBlob(){
+  if(!blobSyncId)return;
   setSyncState('syncing');
   try{
-    const meta=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name+%3D+%27cx_team_data.json%27',{headers:{'Authorization':'Bearer '+gdriveToken}}).then(r=>r.json());
-    if(meta.files&&meta.files.length){
-      gdriveFileId=meta.files[0].id;
-      const data=await fetch(`https://www.googleapis.com/drive/v3/files/${gdriveFileId}?alt=media`,{headers:{'Authorization':'Bearer '+gdriveToken}}).then(r=>r.json());
-      D=data;migrateData();localStorage.setItem(SK,JSON.stringify(D));render();
+    const data=await fetch(BLOB_BASE+blobSyncId,{headers:{'Accept':'application/json'}}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();});
+    // Usa i dati cloud solo se più recenti (o se locali non hanno timestamp)
+    if(!D._savedAt||!data._savedAt||(data._savedAt>D._savedAt)){
+      D=data;migrateData();localStorage.setItem(SK,JSON.stringify(D));if(document.getElementById('app').style.display!=='none')render();
     }
-    setSyncState('synced');
+    setSyncState('active');
   }catch(e){setSyncState('error');}
 }
+
+async function createBlob(){
+  setSyncState('syncing');
+  try{
+    D._savedAt=Date.now();
+    const res=await fetch('https://jsonblob.com/api/jsonBlob/',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(D)});
+    if(!res.ok)throw new Error(res.status);
+    const loc=res.headers.get('Location')||'';
+    blobSyncId=loc.split('/').pop();
+    if(!blobSyncId)throw new Error('no id');
+    localStorage.setItem(SK_BLOB,blobSyncId);
+    localStorage.setItem(SK,JSON.stringify(D));
+    setSyncState('active');
+    return blobSyncId;
+  }catch(e){setSyncState('error');return null;}
+}
+
+function saveToCloud(){pushToBlob();}// alias per compatibilità
+
+function driveClick(){openM('modal-drive');renderDriveModal();}
+
+function renderDriveModal(){
+  const body=document.getElementById('drive-modal-body');
+  const foot=document.getElementById('drive-modal-foot');
+  if(!body)return;
+  if(blobSyncId){
+    body.innerHTML=`<p>🟢 <strong>Sincronizzazione squadra attiva.</strong></p>
+<p style="font-size:12px;color:#555">Ogni salvataggio aggiorna il cloud automaticamente. Tutti i dispositivi della squadra vedono i dati in tempo reale.</p>
+<div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+  <div style="font-size:11px;color:#888;margin-bottom:4px">CODICE SQUADRA (condividilo con i meccanici)</div>
+  <div style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:2px;color:#1e293b;word-break:break-all">${blobSyncId}</div>
+</div>
+<p style="font-size:12px;color:#888">I meccanici aprono l'app → toccano "Sync Squadra" → inseriscono questo codice. Una volta sola.</p>`;
+    foot.innerHTML=`<button class="btn bs" onclick="pullFromBlob();closeM('modal-drive')">⬇ Aggiorna ora</button><button class="btn bd" onclick="disconnectBlob()">Scollega</button><button class="btn bp" onclick="closeM('modal-drive')">OK</button>`;
+  }else{
+    body.innerHTML=`<p><strong>Sincronizzazione squadra</strong> permette a tutti i dispositivi (telefoni, tablet) di condividere gli stessi dati in tempo reale, senza mandare file.</p>
+<hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb">
+<div class="fg" style="margin-bottom:10px"><label>Hai già un codice squadra?</label><div style="display:flex;gap:8px"><input id="blob-code-in" placeholder="Incolla il codice qui…" style="flex:1"><button class="btn bp sm" onclick="joinBlob()">Connetti</button></div></div>
+<div style="text-align:center;color:#888;font-size:12px;margin:8px 0">— oppure —</div>
+<p style="font-size:13px;color:#555">Sei il <strong>primo a configurare</strong>? Crea un nuovo codice squadra e condividilo con i meccanici.</p>`;
+    foot.innerHTML=`<button class="btn bs" onclick="closeM('modal-drive')">Annulla</button><button class="btn bp" onclick="setupNewBlob()">✨ Crea Codice Squadra</button>`;
+  }
+}
+
+async function setupNewBlob(){
+  document.getElementById('drive-modal-foot').innerHTML='<span style="color:#888">⏳ Creazione in corso…</span>';
+  const id=await createBlob();
+  if(id)renderDriveModal();else document.getElementById('drive-modal-foot').innerHTML='<p style="color:red">Errore di rete. Riprova.</p><button class="btn bs" onclick="closeM(\'modal-drive\')">Chiudi</button>';
+}
+
+async function joinBlob(){
+  const code=(document.getElementById('blob-code-in')?.value||'').trim();
+  if(!code){alert('Inserisci il codice squadra');return;}
+  blobSyncId=code;
+  localStorage.setItem(SK_BLOB,blobSyncId);
+  await pullFromBlob();
+  renderDriveModal();
+  render();
+}
+
+function disconnectBlob(){
+  if(!confirm('Scollega questo dispositivo dalla squadra? I dati locali restano.'))return;
+  blobSyncId=null;
+  localStorage.removeItem(SK_BLOB);
+  setSyncState('default');
+  renderDriveModal();
+}
+
+// Auto-pull ogni 60 secondi se connessi
+setInterval(()=>{if(blobSyncId&&document.getElementById('app').style.display!=='none')pullFromBlob();},60000);
 
 // === MODAL comp save/del ===
 function saveMComp(){
@@ -2420,8 +2528,18 @@ ${body}
 function initAuth(){
   const stored=sessionStorage.getItem('cx_auth');
   if(stored){try{currentUser=JSON.parse(stored);}catch(e){currentUser=null;}}
+  // Imposta stato sync button
+  if(blobSyncId)setSyncState('active');
+  // Pull dal cloud all'avvio (solo se connessi e non loggati — se loggati aspettiamo dopo showApp)
+  if(blobSyncId&&!currentUser){
+    pullFromBlob().then(()=>{
+      if(currentUser&&getUser(currentUser.id)){showApp();}else{showLogin();}
+    });
+    return;
+  }
   if(currentUser&&getUser(currentUser.id)){
     showApp();
+    if(blobSyncId)pullFromBlob();
   } else {
     currentUser=null;
     sessionStorage.removeItem('cx_auth');
@@ -2449,7 +2567,7 @@ function showApp(){
   nav('dash');
 }
 function doLogin(){
-  const id=document.getElementById('login-id').value.trim();
+  const id=document.getElementById('login-id').value.trim().toLowerCase();
   const pwd=document.getElementById('login-pwd').value;
   const err=document.getElementById('login-err');
   err.style.display='none';
