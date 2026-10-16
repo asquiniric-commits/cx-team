@@ -2317,7 +2317,7 @@ ${errHtml}
   <label class="btn bs" style="cursor:pointer">📥 Importa JSON<input type="file" accept=".json" style="display:none" onchange="importBackupSync(this)"></label>
 </div>
 <p style="font-size:11px;color:#888;margin-top:8px">Esporta dal dispositivo principale → condividi via WhatsApp/AirDrop → importa sugli altri dispositivi.</p>`;
-    foot.innerHTML=`<button class="btn bs" onclick="pullFromBlob();renderDriveModal()">⬇ Aggiorna cloud</button><button class="btn bd" onclick="disconnectBlob()">Scollega</button><button class="btn bp" onclick="closeM('modal-drive')">OK</button>`;
+    foot.innerHTML=`<button class="btn bp" onclick="pushToBlob().then(()=>renderDriveModal())">⬆ Carica su cloud</button><button class="btn bs" onclick="pullFromBlob();renderDriveModal()">⬇ Aggiorna cloud</button><button class="btn bd" onclick="disconnectBlob()">Scollega</button><button class="btn bp" onclick="closeM('modal-drive')">OK</button>`;
   }else{
     body.innerHTML=`<p><strong>Sincronizzazione squadra</strong> — tutti i dispositivi condividono gli stessi dati.</p>
 <hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb">
