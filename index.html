@@ -1201,22 +1201,26 @@ function aggiornaCodiceComp(){
 
 function rCat(){
   const att=D.catalogo.filter(c=>c.stato!=='archiviato');
-  const sott=att.filter(c=>(c.giac||0)<=(c.smin||0));
-  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  const sott=att.filter(c=>(c.giac||0)<=(c.smin||0)&&(c.smin||0)>0);
+  // Raccolta fornitori unici per il filtro
+  const fornitori=[...new Set(att.map(c=>(c.fornitore||'').trim()).filter(Boolean))].sort();
+  const selForn=window._catFiltForn||'';
+  const visibili=selForn?att.filter(c=>(c.fornitore||'')=== selForn):att;
+  return`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
   <button class="btn btn-p" onclick="openMComp('')">➕ Nuovo</button>
   <button class="btn btn-s" onclick="showQMode(null);document.getElementById('modal-qm').classList.add('open')">⚡ Mov. Rapido</button>
   <button class="btn btn-s" onclick="genPDF('catalogo')">📄 PDF</button>
   <label class="btn btn-s" style="cursor:pointer;margin:0">📥 Importa<input type="file" accept=".json" style="display:none" onchange="importCatalogo(this)"></label>
+  ${fornitori.length>0?`<select style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;background:#fff" onchange="window._catFiltForn=this.value;setTab('mag',0)"><option value="">Tutti i fornitori (${att.length})</option>${fornitori.map(f=>`<option value="${esc(f)}" ${selForn===f?'selected':''}>${esc(f)} (${att.filter(c=>(c.fornitore||'')===f).length})</option>`).join('')}</select>`:''}
   <input class="search-in" placeholder="🔍 Cerca..." oninput="filtraCat(this.value)">
 </div>
 ${sott.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ Sotto scorta: ${sott.map(c=>esc(c.desc)).join(', ')}</div>`:''}
 <div class="table-wrap"><table class="tbl" id="tbl-cat">
-<thead><tr><th>Codice</th><th>Descrizione</th><th>U.M.</th><th>Costo</th><th>Giacenza</th><th>S.Min</th><th>Posizione</th><th>Stato</th><th></th></tr></thead>
-<tbody>${att.map(c=>`<tr class="${(c.giac||0)<=(c.smin||0)?'row-warn':''}">
-  <td>${codBadge(c.codice)}</td>
+<thead><tr><th>Codice</th><th>Descrizione</th><th>Fornitore</th><th>Giac.</th><th>S.Min</th><th>Posizione</th><th>Stato</th><th></th></tr></thead>
+<tbody>${visibili.map(c=>`<tr class="${(c.giac||0)<=(c.smin||0)&&(c.smin||0)>0?'row-warn':''}">
+  <td style="font-family:monospace;font-size:12px">${esc(c.codice||c.rif||c.id)}</td>
   <td>${esc(c.desc)}</td>
-  <td>${esc(c.um)}</td>
-  <td>${fe(c.costo)}</td>
+  <td style="font-size:12px;color:#666">${esc(c.fornitore||'')}</td>
   <td><strong>${c.giac||0}</strong></td>
   <td>${c.smin||0}</td>
   <td>${zonaBadge(c.posizione)}</td>
@@ -1225,7 +1229,7 @@ ${sott.length?`<div class="alert-box" style="margin-bottom:8px;">⚠️ Sotto sc
 </tr>`).join('')}
 </tbody></table></div>`;
 }
-function filtraCat(v){const q=v.toLowerCase();document.querySelectorAll('#tbl-cat tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':' none';});}
+function filtraCat(v){const q=v.toLowerCase();document.querySelectorAll('#tbl-cat tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 function righecat(){}
 
 function importCatalogo(input){
@@ -2237,16 +2241,24 @@ async function createBlob(){
   setSyncState('syncing');
   try{
     D._savedAt=Date.now();
-    const res=await fetch('https://jsonblob.com/api/jsonBlob/',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(D)});
-    if(!res.ok)throw new Error(res.status);
-    const loc=res.headers.get('Location')||'';
-    blobSyncId=loc.split('/').pop();
-    if(!blobSyncId)throw new Error('no id');
-    localStorage.setItem(SK_BLOB,blobSyncId);
-    localStorage.setItem(SK,JSON.stringify(D));
+    const payload=JSON.stringify(D);
+    const res=await fetch('https://jsonblob.com/api/jsonBlob/',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:payload});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    let id='';
+    // 1) Try Location header (blocked by CORS on most browsers unless server exposes it)
+    const loc=res.headers.get('Location')||res.headers.get('location')||'';
+    if(loc)id=loc.split('/').pop();
+    // 2) Try x-jsonblob-id header fallback
+    if(!id)id=res.headers.get('x-jsonblob-id')||'';
+    // 3) Try parsing response body for a jsonblob URL
+    if(!id){try{const txt=await res.clone().text();const m=txt.match(/([0-9a-f]{16,})/i);if(m)id=m[1];}catch(e2){}}
+    if(!id)throw new Error('CORS_NO_ID');
+    blobSyncId=id;
+    localStorage.setItem(SK_BLOB,id);
+    localStorage.setItem(SK,payload);
     setSyncState('active');
-    return blobSyncId;
-  }catch(e){setSyncState('error');return null;}
+    return id;
+  }catch(e){setSyncState('error');console.error('createBlob:',e.message);return null;}
 }
 
 function saveToCloud(){pushToBlob();}// alias per compatibilità
@@ -2279,7 +2291,36 @@ function renderDriveModal(){
 async function setupNewBlob(){
   document.getElementById('drive-modal-foot').innerHTML='<span style="color:#888">⏳ Creazione in corso…</span>';
   const id=await createBlob();
-  if(id)renderDriveModal();else document.getElementById('drive-modal-foot').innerHTML='<p style="color:red">Errore di rete. Riprova.</p><button class="btn bs" onclick="closeM(\'modal-drive\')">Chiudi</button>';
+  if(id){renderDriveModal();}
+  else{
+    document.getElementById('drive-modal-body').innerHTML=`
+<p style="color:#b91c1c;font-weight:600">⚠️ Creazione automatica non riuscita.</p>
+<p style="font-size:13px;line-height:1.6;margin:8px 0">Il browser ha bloccato la risposta per sicurezza (CORS). Puoi creare il codice manualmente in 30 secondi:</p>
+<ol style="font-size:13px;line-height:2;padding-left:18px">
+  <li>Apri <a href="https://jsonblob.com" target="_blank" style="color:#2563eb;font-weight:600">jsonblob.com</a> in un'altra scheda</li>
+  <li>Clicca <strong>New JSON Blob</strong></li>
+  <li>Incolla <code style="background:#f1f5f9;padding:2px 5px;border-radius:3px">{}</code> nel campo e clicca <strong>Save</strong></li>
+  <li>Copia l'ID dalla URL della pagina (es: <code style="background:#f1f5f9;padding:2px 5px;border-radius:3px">1234567890abcdef1234</code>)</li>
+  <li>Incollalo qui sotto:</li>
+</ol>
+<div style="display:flex;gap:8px;margin-top:12px">
+  <input id="blob-manual-id" placeholder="ID blob (es: 1234567890abcdef1234)…" style="flex:1;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px">
+  <button class="btn bp" onclick="setManualBlobId()">Usa →</button>
+</div>`;
+    document.getElementById('drive-modal-foot').innerHTML='<button class="btn bs" onclick="closeM(\'modal-drive\')">Annulla</button>';
+  }
+}
+
+async function setManualBlobId(){
+  const raw=(document.getElementById('blob-manual-id')?.value||'').trim();
+  if(!raw){alert('Inserisci un ID valido');return;}
+  const id=raw.includes('/')?raw.split('/').pop():raw;
+  if(id.length<10){alert('ID troppo corto — copia tutta la parte finale della URL');return;}
+  blobSyncId=id;
+  localStorage.setItem(SK_BLOB,id);
+  document.getElementById('drive-modal-body').innerHTML='<p style="color:#888">⏳ Connessione in corso…</p>';
+  await pushToBlob();
+  renderDriveModal();
 }
 
 async function joinBlob(){
