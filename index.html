@@ -2200,25 +2200,39 @@ function delAssRuo(id){
   save();render();
 }
 
-// === SYNC SQUADRA (v4.0 — jsonstore.io, codice generato localmente, zero account) ===
+// === SYNC SQUADRA (v5.0 — jsonstore.io + sync manuale affidabile) ===
 const BIN_BASE='https://www.jsonstore.io/';
 const SK_BLOB='cx_blob_id';
 let blobSyncId=localStorage.getItem(SK_BLOB)||null;
-let syncPending=false;
+let _lastSyncErr=null;
+let _lastSyncOk=null;
 
-function setSyncState(state){
+function setSyncState(state,msg){
   const btn=document.getElementById('sync-btn');
   if(!btn)return;
   btn.className='sync-btn '+state;
   const labels={default:'🔗 Sync Squadra',syncing:'⏳ Sinc…',synced:'✅ Sincronizzato',error:'⚠️ Errore sync',active:'🟢 Squadra Attiva'};
   document.getElementById('sync-label').textContent=labels[state]||'🔗 Sync Squadra';
+  if(state==='error'){_lastSyncErr=msg||'Errore sconosciuto';}
+  if(state==='synced'||state==='active'){_lastSyncOk=new Date().toLocaleTimeString('it-IT');_lastSyncErr=null;}
+  // Aggiorna il dettaglio errore se il modale è aperto
+  const errEl=document.getElementById('sync-err-detail');
+  if(errEl&&_lastSyncErr)errEl.textContent=_lastSyncErr;
 }
 
 function genTeamCode(){
-  // Genera un codice locale sicuro — nessuna chiamata API necessaria
   const arr=new Uint8Array(18);
   crypto.getRandomValues(arr);
   return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function _syncErrMsg(e){
+  const raw=e.message||String(e);
+  if(raw.includes('Failed to fetch')||raw.includes('NetworkError')||raw.includes('Load failed')){
+    if(location.protocol==='file:')return 'CORS bloccato (file://) — vedi note';
+    return 'Rete non disponibile';
+  }
+  return raw;
 }
 
 async function pushToBlob(){
@@ -2227,9 +2241,13 @@ async function pushToBlob(){
   localStorage.setItem(SK,JSON.stringify(D));
   try{
     const res=await fetch(BIN_BASE+blobSyncId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)});
-    if(!res.ok)throw new Error(res.status);
+    if(!res.ok)throw new Error('HTTP '+res.status);
     setSyncState('synced');
-  }catch(e){setSyncState('error');console.error('pushToBlob:',e.message);}
+  }catch(e){
+    const msg=_syncErrMsg(e);
+    setSyncState('error',msg);
+    console.error('pushToBlob:',msg,e);
+  }
 }
 
 async function pullFromBlob(){
@@ -2237,19 +2255,23 @@ async function pullFromBlob(){
   setSyncState('syncing');
   try{
     const res=await fetch(BIN_BASE+blobSyncId);
-    if(!res.ok)throw new Error(res.status);
+    if(!res.ok)throw new Error('HTTP '+res.status);
     const data=await res.json();
-    // jsonstore.io wraps in {result:{...}, ok:true}
     const payload=data.result||data;
     if(!payload||!payload._savedAt){setSyncState('active');return;}
     if(!D._savedAt||(payload._savedAt>D._savedAt)){
-      D=payload;migrateData();localStorage.setItem(SK,JSON.stringify(D));if(document.getElementById('app').style.display!=='none')render();
+      D=payload;migrateData();localStorage.setItem(SK,JSON.stringify(D));
+      if(document.getElementById('app').style.display!=='none')render();
     }
     setSyncState('active');
-  }catch(e){setSyncState('error');console.error('pullFromBlob:',e.message);}
+  }catch(e){
+    const msg=_syncErrMsg(e);
+    setSyncState('error',msg);
+    console.error('pullFromBlob:',msg,e);
+  }
 }
 
-function saveToCloud(){pushToBlob();}// alias per compatibilità
+function saveToCloud(){pushToBlob();}
 
 function driveClick(){openM('modal-drive');renderDriveModal();}
 
@@ -2257,32 +2279,44 @@ function renderDriveModal(){
   const body=document.getElementById('drive-modal-body');
   const foot=document.getElementById('drive-modal-foot');
   if(!body)return;
+  const isFile=location.protocol==='file:';
   if(blobSyncId){
-    body.innerHTML=`<p>🟢 <strong>Sincronizzazione squadra attiva.</strong></p>
-<p style="font-size:12px;color:#555">Ogni salvataggio aggiorna il cloud automaticamente. Tutti i dispositivi della squadra vedono i dati in tempo reale.</p>
-<div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
-  <div style="font-size:11px;color:#888;margin-bottom:4px">CODICE SQUADRA (condividilo con i meccanici)</div>
-  <div style="font-family:monospace;font-size:13px;font-weight:700;color:#1e293b;word-break:break-all;letter-spacing:1px">${blobSyncId}</div>
+    const errHtml=_lastSyncErr?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:10px;font-size:12px;color:#dc2626;margin:10px 0">
+  ⚠️ <strong id="sync-err-detail">${_lastSyncErr}</strong>
+  ${isFile?`<div style="margin-top:6px;color:#7f1d1d">Il browser blocca le richieste di rete quando l'app è aperta come file locale (<code>file://</code>).<br>
+  <strong>Soluzione:</strong> usa il <strong>Sync Manuale</strong> qui sotto oppure carica l'app su un server web.</div>`:''}
+</div>`:`<div style="font-size:11px;color:#10b981;margin:6px 0">✓ Ultimo sync riuscito: ${_lastSyncOk||'—'}</div>`;
+    body.innerHTML=`<p>🟢 <strong>Squadra configurata.</strong></p>
+<div style="margin:10px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+  <div style="font-size:11px;color:#888;margin-bottom:4px">CODICE SQUADRA</div>
+  <div style="font-family:monospace;font-size:13px;font-weight:700;color:#1e293b;word-break:break-all">${blobSyncId}</div>
 </div>
-<p style="font-size:12px;color:#888">I meccanici aprono l'app → toccano "Sync Squadra" → inseriscono questo codice. Una volta sola.</p>`;
-    foot.innerHTML=`<button class="btn bs" onclick="pullFromBlob();closeM('modal-drive')">⬇ Aggiorna ora</button><button class="btn bd" onclick="disconnectBlob()">Scollega</button><button class="btn bp" onclick="closeM('modal-drive')">OK</button>`;
+${errHtml}
+<hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb">
+<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">📦 Sync Manuale (sempre funzionante):</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn bs" onclick="exportBackupSync()">📤 Esporta JSON</button>
+  <label class="btn bs" style="cursor:pointer">📥 Importa JSON<input type="file" accept=".json" style="display:none" onchange="importBackupSync(this)"></label>
+</div>
+<p style="font-size:11px;color:#888;margin-top:8px">Esporta dal dispositivo principale → condividi via WhatsApp/AirDrop → importa sugli altri dispositivi.</p>`;
+    foot.innerHTML=`<button class="btn bs" onclick="pullFromBlob();renderDriveModal()">⬇ Aggiorna cloud</button><button class="btn bd" onclick="disconnectBlob()">Scollega</button><button class="btn bp" onclick="closeM('modal-drive')">OK</button>`;
   }else{
-    body.innerHTML=`<p><strong>Sincronizzazione squadra</strong> permette a tutti i dispositivi (telefoni, tablet) di condividere gli stessi dati in tempo reale, senza mandare file.</p>
+    body.innerHTML=`<p><strong>Sincronizzazione squadra</strong> — tutti i dispositivi condividono gli stessi dati.</p>
 <hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb">
 <div class="fg" style="margin-bottom:10px"><label>Hai già un codice squadra?</label><div style="display:flex;gap:8px"><input id="blob-code-in" placeholder="Incolla il codice qui…" style="flex:1"><button class="btn bp sm" onclick="joinBlob()">Connetti</button></div></div>
 <div style="text-align:center;color:#888;font-size:12px;margin:8px 0">— oppure —</div>
-<p style="font-size:13px;color:#555">Sei il <strong>primo a configurare</strong>? Crea un nuovo codice squadra e condividilo con i meccanici.</p>`;
+<p style="font-size:13px;color:#555">Sei il <strong>primo a configurare</strong>? Crea un nuovo codice squadra e condividilo con i meccanici.</p>
+${isFile?`<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:8px;font-size:11px;color:#92400e;margin-top:8px">
+  ⚠️ App aperta come file locale — il sync cloud potrebbe non funzionare. Usa il <strong>Sync Manuale</strong> sopra se hai problemi.</div>`:''}`;
     foot.innerHTML=`<button class="btn bs" onclick="closeM('modal-drive')">Annulla</button><button class="btn bp" onclick="setupNewBlob()">✨ Crea Codice Squadra</button>`;
   }
 }
 
 async function setupNewBlob(){
   document.getElementById('drive-modal-foot').innerHTML='<span style="color:#888">⏳ Creazione in corso…</span>';
-  // Il codice viene generato localmente — nessuna API call per crearlo
   const id=genTeamCode();
   blobSyncId=id;
   localStorage.setItem(SK_BLOB,id);
-  // Prima push per inizializzare il bin
   await pushToBlob();
   renderDriveModal();
 }
@@ -2305,8 +2339,42 @@ function disconnectBlob(){
   renderDriveModal();
 }
 
-// Auto-pull ogni 60 secondi se connessi
-setInterval(()=>{if(blobSyncId&&document.getElementById('app').style.display!=='none')pullFromBlob();},60000);
+// Sync Manuale — export/import JSON (sempre funzionante, no CORS)
+function exportBackupSync(){
+  const json=JSON.stringify(D,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='cx_squadra_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+}
+
+function importBackupSync(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data._savedAt){alert('File non valido o non compatibile.');return;}
+      if(!D._savedAt||data._savedAt>D._savedAt){
+        if(confirm('Importare i dati dal file? I dati locali verranno sostituiti.')){
+          D=data;migrateData();save();render();
+          alert('✅ Dati importati con successo!');
+          closeM('modal-drive');
+        }
+      }else{
+        alert('I dati locali sono già più recenti ('+new Date(D._savedAt).toLocaleString('it-IT')+').\nNessuna modifica.');
+      }
+    }catch(err){alert('Errore nel file: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+// Auto-pull ogni 90 secondi se connessi e cloud non in errore
+setInterval(()=>{
+  if(blobSyncId&&!_lastSyncErr&&document.getElementById('app').style.display!=='none')pullFromBlob();
+},90000);
 
 // === MODAL comp save/del ===
 function saveMComp(){
