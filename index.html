@@ -978,6 +978,16 @@ function migrateData(){let changed=false;
 if(!D.ruote||!D.ruote.length||!D.ruote[0].ant){D.ruote=JSON.parse(JSON.stringify(DEF.ruote));changed=true;}
 // Migrazione: aggiunge users se mancante (primo accesso post-aggiornamento)
 if(!D.users||!D.users.length){D.users=JSON.parse(JSON.stringify(DEF.users));changed=true;}
+// Migrazione: ricodifica articoli con codice fornitore → codice interno
+const intPat=/^[A-I]-[A-Z]{2,}-[A-Z]{2,}-\d{3}$/;
+const toRecode=D.catalogo.filter(c=>c.codice&&!intPat.test(c.codice));
+if(toRecode.length){
+  toRecode.forEach(c=>{
+    if(!c.rif&&c.codice)c.rif=c.codice; // salva codice fornitore
+    c.codice=genCodice(c.codArea||'C',c.codCat||'MEC',c.codSubcat||'TUB');
+  });
+  changed=true;
+}
 return changed;}
 function load(){const s=localStorage.getItem(SK);if(s){try{D=JSON.parse(s);if(migrateData())save();}catch(e){D=JSON.parse(JSON.stringify(DEF));}}else{D=JSON.parse(JSON.stringify(DEF));save();}}
 function save(){D._savedAt=Date.now();localStorage.setItem(SK,JSON.stringify(D));pushToBlob();}
@@ -1253,14 +1263,20 @@ function importCatalogo(input){
         while(existingIds.has(id))id=id+'_'+i;
         existingIds.add(id);
         if(item.rif)existingRifs.add(item.rif);
+        const area=item.codArea||'C';
+        const cat=item.codCat||'MEC';
+        const sub=item.codSubcat||'TUB';
+        // Genera codice interno; salva il codice fornitore come rif
+        const codiceInterno=genCodice(area,cat,sub);
+        const rifFornitore=item.rif||item.codice||'';
         D.catalogo.push({
           id,
-          codice:item.codice||item.rif||id,
-          codArea:item.codArea||'C',
-          codCat:item.codCat||'MEC',
-          codSubcat:item.codSubcat||'TUB',
+          codice:codiceInterno,
+          codArea:area,
+          codCat:cat,
+          codSubcat:sub,
           stagione:item.stagione||D.stagione||'',
-          rif:item.rif||'',
+          rif:rifFornitore,
           prezzoStorico:item.prezzoStorico||[],
           desc:item.desc||'',
           um:item.um||'pz',
@@ -2255,8 +2271,10 @@ async function pullFromBlob(){
   setSyncState('syncing');
   try{
     const res=await fetch(BIN_BASE+blobSyncId);
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
+    const text=await res.text();
+    // jsonstore.io restituisce HTML per chiavi inesistenti — non è un errore
+    if(!text||!text.trim().startsWith('{')){setSyncState('active');return;}
+    const data=JSON.parse(text);
     const payload=data.result||data;
     if(!payload||!payload._savedAt){setSyncState('active');return;}
     if(!D._savedAt||(payload._savedAt>D._savedAt)){
