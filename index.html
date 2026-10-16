@@ -2200,8 +2200,8 @@ function delAssRuo(id){
   save();render();
 }
 
-// === SYNC SQUADRA (v2.0 — JSONBlob, nessun account richiesto) ===
-const BLOB_BASE='https://jsonblob.com/api/jsonBlob/';
+// === SYNC SQUADRA (v3.0 — JSONBin.io, CORS-safe, nessun account richiesto) ===
+const BIN_BASE='https://api.jsonbin.io/v3/b/';
 const SK_BLOB='cx_blob_id';
 let blobSyncId=localStorage.getItem(SK_BLOB)||null;
 let syncPending=false;
@@ -2219,7 +2219,8 @@ async function pushToBlob(){
   D._savedAt=Date.now();
   localStorage.setItem(SK,JSON.stringify(D));
   try{
-    await fetch(BLOB_BASE+blobSyncId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)});
+    const res=await fetch(BIN_BASE+blobSyncId,{method:'PUT',headers:{'Content-Type':'application/json','X-Bin-Versioning':'false'},body:JSON.stringify(D)});
+    if(!res.ok)throw new Error(res.status);
     setSyncState('synced');
   }catch(e){setSyncState('error');}
 }
@@ -2228,10 +2229,13 @@ async function pullFromBlob(){
   if(!blobSyncId)return;
   setSyncState('syncing');
   try{
-    const data=await fetch(BLOB_BASE+blobSyncId,{headers:{'Accept':'application/json'}}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();});
-    // Usa i dati cloud solo se più recenti (o se locali non hanno timestamp)
-    if(!D._savedAt||!data._savedAt||(data._savedAt>D._savedAt)){
-      D=data;migrateData();localStorage.setItem(SK,JSON.stringify(D));if(document.getElementById('app').style.display!=='none')render();
+    const res=await fetch(BIN_BASE+blobSyncId+'/latest',{headers:{'X-Bin-Meta':'false'}});
+    if(!res.ok)throw new Error(res.status);
+    const data=await res.json();
+    // JSONBin wraps in {record:{...}} — gestisci entrambi i formati
+    const payload=data.record||data;
+    if(!D._savedAt||!payload._savedAt||(payload._savedAt>D._savedAt)){
+      D=payload;migrateData();localStorage.setItem(SK,JSON.stringify(D));if(document.getElementById('app').style.display!=='none')render();
     }
     setSyncState('active');
   }catch(e){setSyncState('error');}
@@ -2242,17 +2246,15 @@ async function createBlob(){
   try{
     D._savedAt=Date.now();
     const payload=JSON.stringify(D);
-    const res=await fetch('https://jsonblob.com/api/jsonBlob/',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:payload});
+    const res=await fetch('https://api.jsonbin.io/v3/b',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Bin-Private':'false'},
+      body:payload
+    });
     if(!res.ok)throw new Error('HTTP '+res.status);
-    let id='';
-    // 1) Try Location header (blocked by CORS on most browsers unless server exposes it)
-    const loc=res.headers.get('Location')||res.headers.get('location')||'';
-    if(loc)id=loc.split('/').pop();
-    // 2) Try x-jsonblob-id header fallback
-    if(!id)id=res.headers.get('x-jsonblob-id')||'';
-    // 3) Try parsing response body for a jsonblob URL
-    if(!id){try{const txt=await res.clone().text();const m=txt.match(/([0-9a-f]{16,})/i);if(m)id=m[1];}catch(e2){}}
-    if(!id)throw new Error('CORS_NO_ID');
+    const json=await res.json();
+    const id=json?.metadata?.id||'';
+    if(!id)throw new Error('no id in response');
     blobSyncId=id;
     localStorage.setItem(SK_BLOB,id);
     localStorage.setItem(SK,payload);
@@ -2293,34 +2295,9 @@ async function setupNewBlob(){
   const id=await createBlob();
   if(id){renderDriveModal();}
   else{
-    document.getElementById('drive-modal-body').innerHTML=`
-<p style="color:#b91c1c;font-weight:600">⚠️ Creazione automatica non riuscita.</p>
-<p style="font-size:13px;line-height:1.6;margin:8px 0">Il browser ha bloccato la risposta per sicurezza (CORS). Puoi creare il codice manualmente in 30 secondi:</p>
-<ol style="font-size:13px;line-height:2;padding-left:18px">
-  <li>Apri <a href="https://jsonblob.com" target="_blank" style="color:#2563eb;font-weight:600">jsonblob.com</a> in un'altra scheda</li>
-  <li>Clicca <strong>New JSON Blob</strong></li>
-  <li>Incolla <code style="background:#f1f5f9;padding:2px 5px;border-radius:3px">{}</code> nel campo e clicca <strong>Save</strong></li>
-  <li>Copia l'ID dalla URL della pagina (es: <code style="background:#f1f5f9;padding:2px 5px;border-radius:3px">1234567890abcdef1234</code>)</li>
-  <li>Incollalo qui sotto:</li>
-</ol>
-<div style="display:flex;gap:8px;margin-top:12px">
-  <input id="blob-manual-id" placeholder="ID blob (es: 1234567890abcdef1234)…" style="flex:1;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px">
-  <button class="btn bp" onclick="setManualBlobId()">Usa →</button>
-</div>`;
-    document.getElementById('drive-modal-foot').innerHTML='<button class="btn bs" onclick="closeM(\'modal-drive\')">Annulla</button>';
+    document.getElementById('drive-modal-body').innerHTML=`<p style="color:#b91c1c;font-weight:600">⚠️ Errore di rete.</p><p style="font-size:13px;margin-top:8px">Controlla la connessione e riprova.</p>`;
+    document.getElementById('drive-modal-foot').innerHTML='<button class="btn bs" onclick="closeM(\'modal-drive\')">Chiudi</button><button class="btn bp" onclick="setupNewBlob()">🔄 Riprova</button>';
   }
-}
-
-async function setManualBlobId(){
-  const raw=(document.getElementById('blob-manual-id')?.value||'').trim();
-  if(!raw){alert('Inserisci un ID valido');return;}
-  const id=raw.includes('/')?raw.split('/').pop():raw;
-  if(id.length<10){alert('ID troppo corto — copia tutta la parte finale della URL');return;}
-  blobSyncId=id;
-  localStorage.setItem(SK_BLOB,id);
-  document.getElementById('drive-modal-body').innerHTML='<p style="color:#888">⏳ Connessione in corso…</p>';
-  await pushToBlob();
-  renderDriveModal();
 }
 
 async function joinBlob(){
